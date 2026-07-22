@@ -283,20 +283,23 @@
     <p style="color:var(--ink-soft); font-size:0.9rem; margin:-8px 0 18px;">Enter your monthly take-home, then roughly what goes to needs, wants, and savings. We compare it to the 50/30/20 rule of thumb.</p>
     <div class="field-grid">
       <div class="field">
-        <label for="heroIncome">Monthly take-home</label>
+        <label for="heroIncome">Take-home income</label>
         <input type="number" id="heroIncome" value="5000" min="0" step="100">
       </div>
       <div class="field">
-        <label for="heroNeeds">Needs (housing, food, transport)</label>
+        <label for="heroNeeds">Needs</label>
         <input type="number" id="heroNeeds" value="2600" min="0" step="50">
+        <div class="hint">Housing, food, transport</div>
       </div>
       <div class="field">
-        <label for="heroWants">Wants (discretionary)</label>
+        <label for="heroWants">Wants</label>
         <input type="number" id="heroWants" value="1400" min="0" step="50">
+        <div class="hint">Discretionary spending</div>
       </div>
       <div class="field">
-        <label for="heroSavings">Savings &amp; extra debt payoff</label>
+        <label for="heroSavings">Savings &amp; debt</label>
         <input type="number" id="heroSavings" value="1000" min="0" step="50">
+        <div class="hint">Includes extra debt payoff</div>
       </div>
     </div>
   </div>
