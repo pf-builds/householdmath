@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emergency Fund Calculator — How Much to Save and How Long It Takes</title>
+<meta name="description" content="Work out your emergency fund target at 3, 6, or 9 months of essential expenses, how many months you have covered now, and how long the gap takes to close at your savings rate.">
+<link rel="canonical" href="https://pf-builds.github.io/householdmath/emergency-fund-calculator.html">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to calculate your emergency fund target",
+  "step": [
+    { "@type": "HowToStep", "name": "Enter your essential monthly expenses", "text": "Add up the costs you'd still have to pay with no income, housing, utilities, food, transportation, insurance, and minimum debt payments." },
+    { "@type": "HowToStep", "name": "Enter what you've already saved", "text": "Enter the amount you currently hold in accessible savings earmarked for emergencies." },
+    { "@type": "HowToStep", "name": "Choose your coverage target", "text": "Pick how many months of essentials you want covered, commonly 3 to 6, or more for variable or single incomes." },
+    { "@type": "HowToStep", "name": "Enter your monthly savings amount", "text": "Enter what you can set aside each month to see how long closing the gap will take." }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How many months of expenses should an emergency fund cover?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A widely used guideline is three to six months of essential expenses. Households with a single income, variable or commission-based income, or a longer expected job search often aim higher, six to nine months or more. There is no single legal standard, the right target depends on how stable your income is and how quickly you could replace it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What counts as an essential expense for an emergency fund?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Costs you would still have to pay with no income: housing, utilities, food, transportation, insurance, and minimum debt payments. Discretionary spending like dining out, subscriptions, and travel is not included, because you would cut it during an actual emergency. This calculator sizes the fund to essentials only, which is why the target is smaller than your full monthly budget."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should I build an emergency fund or pay off debt first?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Common guidance is to build a small starter fund first, often a few hundred to a couple thousand dollars, so a surprise expense does not push you further into debt, then focus on high-interest debt, then finish the full fund. This tool estimates the numbers for planning, it does not weigh your personal trade-offs, a qualified advisor can help you decide the order."
+      }
+    }
+  ]
+}
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #F7F3EC;
+    --panel: #FFFFFF;
+    --ink: #1B2B23;
+    --ink-soft: #5E6E63;
+    --border: #E4DDCF;
+    --forest: #1B3A2F;
+    --forest-bg: #E8EEE8;
+    --gold: #B67F33;
+    --gold-bg: #F4EAD5;
+    --good: #1F6F4C;
+    --good-bg: #E4F1E8;
+    --warn: #A6551D;
+    --warn-bg: #FBEEE3;
+  }
+
+  * { box-sizing: border-box; }
+
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  a { color: var(--forest); }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .site-nav {
+    display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem;
+    padding: 22px 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 32px;
+  }
+  .site-nav .brand-link { color: var(--forest); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; text-decoration: none; }
+  .tools-dropdown { position: relative; }
+  .tools-dropdown summary { cursor: pointer; color: var(--ink-soft); list-style: none; }
+  .tools-dropdown summary::-webkit-details-marker { display: none; }
+  .tools-dropdown summary:hover { color: var(--forest); }
+  .tools-menu {
+    position: absolute; top: 100%; left: 0; margin-top: 8px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px; display: flex; flex-direction: column; min-width: 250px;
+    box-shadow: 0 8px 24px rgba(27,58,47,0.14); z-index: 10;
+  }
+  .tools-menu a { padding: 8px 10px; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 0.82rem; }
+  .tools-menu a:hover { background: var(--forest-bg); color: var(--forest); }
+
+  header { margin-bottom: 28px; }
+  h1 { font-family: 'Fraunces', serif; font-weight: 600; font-size: clamp(1.9rem, 4vw, 2.5rem); line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-soft); font-size: 1.04rem; max-width: 60ch; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-bottom: 24px; }
+  .card h2 { font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 600; margin: 0 0 6px; }
+  .card .card-note { color: var(--ink-soft); font-size: 0.88rem; margin: 0 0 20px; }
+
+  .prefill {
+    display: none; align-items: flex-start; gap: 12px;
+    background: var(--gold-bg); border: 1px solid #E6D2AC; border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 22px; font-size: 0.9rem;
+  }
+  .prefill.show { display: flex; }
+  .prefill .pf-body { flex: 1; }
+  .prefill .pf-body strong { color: var(--forest); }
+  .prefill button {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; font-weight: 600;
+    background: var(--forest); color: #fff; border: none; border-radius: 7px;
+    padding: 8px 14px; cursor: pointer; white-space: nowrap;
+  }
+  .prefill button:hover { background: #14231C; }
+  .prefill .dismiss { background: none; color: var(--ink-soft); padding: 8px 6px; }
+
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 0.88rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field .hint { font-size: 0.8rem; color: var(--ink-soft); font-weight: 400; margin-top: 4px; }
+
+  input[type="number"] {
+    width: 100%; padding: 11px 12px; font-size: 1rem; font-family: 'IBM Plex Mono', monospace;
+    border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--ink);
+  }
+  input[type="number"]:focus { outline: 2px solid var(--forest); outline-offset: 1px; border-color: var(--forest); }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
+
+  .seg { display: flex; gap: 8px; flex-wrap: wrap; }
+  .seg button {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; font-weight: 600;
+    background: var(--bg); color: var(--ink-soft); border: 1.5px solid var(--border);
+    border-radius: 8px; padding: 10px 16px; cursor: pointer;
+  }
+  .seg button.active { background: var(--forest); color: #fff; border-color: var(--forest); }
+  .seg .custom-wrap { display: flex; align-items: center; gap: 8px; }
+  .seg .custom-wrap input { width: 72px; }
+  .seg .custom-wrap span { font-size: 0.82rem; color: var(--ink-soft); }
+
+  .ledger { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 12px; }
+  .ledger-head { padding: 20px 28px 4px; }
+  .ledger-head .eyebrow { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+
+  .headline { padding: 8px 28px 18px; }
+  .headline .big { font-family: 'Fraunces', serif; font-size: 2.2rem; font-weight: 600; color: var(--forest); line-height: 1.1; }
+  .headline .big-note { font-size: 0.9rem; color: var(--ink-soft); margin-top: 4px; }
+
+  .col { padding: 16px 28px 22px; border-top: 1px solid var(--border); background: var(--forest-bg); }
+  .line { display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; padding: 5px 0; color: var(--ink-soft); }
+  .line span:last-child { color: var(--ink); }
+  .line.total { border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 10px; font-weight: 700; color: var(--forest); font-size: 1rem; }
+  .line.total span:last-child { color: var(--forest); }
+
+  .coverage-bar { padding: 0 28px 18px; }
+  .cb-track { height: 12px; border-radius: 7px; background: var(--border); overflow: hidden; margin: 6px 0 6px; position: relative; }
+  .cb-fill { height: 100%; border-radius: 7px; background: var(--forest); transition: width 0.2s ease; }
+  .cb-fill.low { background: var(--warn); }
+  .cb-labels { display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; color: var(--ink-soft); }
+
+  .verdict { border-radius: 10px; padding: 14px 16px; font-size: 0.92rem; margin: 16px 28px 22px; font-weight: 500; }
+  .verdict.good { background: var(--good-bg); border: 1px solid #BFE0CC; color: var(--good); }
+  .verdict.warn { background: var(--warn-bg); border: 1px solid #E8CBB0; color: var(--warn); }
+  .verdict.neutral { background: var(--gold-bg); border: 1px solid #E6D2AC; color: var(--warn); }
+  .verdict strong { font-family: 'IBM Plex Mono', monospace; }
+
+  .handoff {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: var(--forest-bg); border: 1px solid #CADBCB; border-radius: 12px;
+    padding: 14px 18px; margin-bottom: 24px; font-size: 0.88rem; color: var(--ink);
+  }
+  .handoff .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); flex-shrink: 0; }
+  .handoff a { font-weight: 600; }
+
+  section.explain { margin-top: 48px; }
+  section.explain h2 { font-family: 'Fraunces', serif; font-size: 1.4rem; margin: 0 0 14px; }
+  section.explain h3 { font-size: 1.05rem; margin: 24px 0 8px; }
+  section.explain p { color: var(--ink-soft); font-size: 0.98rem; }
+  section.explain ul { color: var(--ink-soft); font-size: 0.98rem; padding-left: 20px; }
+  .src-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.9rem; }
+  .src-table th, .src-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .src-table th { font-weight: 600; color: var(--ink-soft); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .faq h3 { font-size: 1.02rem; margin: 20px 0 6px; color: var(--ink); }
+  .faq p { color: var(--ink-soft); font-size: 0.95rem; margin: 0; }
+
+  .ad-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); margin: 8px 0 10px; }
+
+  footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 0.82rem; color: var(--ink-soft); }
+  footer a { color: var(--ink-soft); }
+</style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6054690102277779" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="site-nav">
+  <a href="index.html" class="brand-link">HouseholdMath</a>
+  <details class="tools-dropdown">
+    <summary>All calculators &#9662;</summary>
+    <div class="tools-menu">
+      <a href="budget-calculator.html">Household budget</a>
+      <a href="emergency-fund-calculator.html">Emergency fund</a>
+      <a href="debt-payoff-calculator.html">Debt payoff (avalanche vs snowball)</a>
+      <a href="savings-goal-calculator.html">Savings goal &amp; compound growth</a>
+      <a href="housing-affordability-calculator.html">Housing affordability</a>
+    </div>
+  </details>
+</nav>
+
+  <header>
+    <h1>How big should your emergency fund be?</h1>
+    <p class="sub">Size your fund to the essentials you'd still owe with no paycheck, see how many months you have covered today, and find out how long it takes to close the gap at your own savings pace.</p>
+  </header>
+
+  <div class="card">
+    <h2>Your numbers</h2>
+    <p class="card-note">An emergency fund covers essential expenses only, the costs you can't stop paying if income stops.</p>
+
+    <div id="prefill" class="prefill">
+      <div class="pf-body">Found your figures from the <strong>budget calculator</strong> this session. Load your essential expenses<span id="pfDetail"></span> here?</div>
+      <button id="prefillApply" type="button">Load</button>
+      <button id="prefillDismiss" class="dismiss" type="button">No thanks</button>
+    </div>
+
+    <div class="field">
+      <label for="essentials">Monthly essential expenses</label>
+      <input type="number" id="essentials" value="3200" min="0" step="50">
+      <div class="hint">Housing, utilities, food, transportation, insurance, and minimum debt payments. Leave out discretionary spending.</div>
+    </div>
+
+    <div class="field">
+      <label for="current">Current emergency savings</label>
+      <input type="number" id="current" value="4000" min="0" step="100">
+      <div class="hint">What you already hold in accessible savings for emergencies.</div>
+    </div>
+
+    <div class="field">
+      <label>Target coverage</label>
+      <div class="seg" id="monthsSeg">
+        <button type="button" data-months="3">3 months</button>
+        <button type="button" data-months="6" class="active">6 months</button>
+        <button type="button" data-months="9">9 months</button>
+        <div class="custom-wrap">
+          <input type="number" id="monthsCustom" min="1" max="24" step="1" placeholder="—">
+          <span>custom</span>
+        </div>
+      </div>
+      <div class="hint">3 to 6 months is the common range. Aim higher for a single or variable income.</div>
+    </div>
+
+    <div class="field">
+      <label for="monthlySave">Monthly amount you can save toward it</label>
+      <input type="number" id="monthlySave" value="500" min="0" step="50">
+      <div class="hint">Used to estimate how long the gap takes to close.</div>
+    </div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head"><div class="eyebrow">Your emergency fund target</div></div>
+    <div class="headline">
+      <div class="big" id="targetBig">—</div>
+      <div class="big-note" id="targetNote">—</div>
+    </div>
+
+    <div class="coverage-bar">
+      <div class="cb-track"><div class="cb-fill" id="cbFill"></div></div>
+      <div class="cb-labels"><span id="cbNow">0 months saved</span><span id="cbTarget">target</span></div>
+    </div>
+
+    <div class="col">
+      <div class="line"><span>Monthly essential expenses</span><span id="outEssentials">—</span></div>
+      <div class="line"><span>Target coverage</span><span id="outMonths">—</span></div>
+      <div class="line total"><span>Fully funded target</span><span id="outTarget">—</span></div>
+      <div class="line" style="margin-top:8px;"><span>Saved so far</span><span id="outCurrent">—</span></div>
+      <div class="line"><span>Covers you for</span><span id="outCoverage">—</span></div>
+      <div class="line total"><span id="gapLabel">Still to save</span><span id="outGap">—</span></div>
+      <div class="line" style="margin-top:8px;"><span>At your savings pace</span><span id="outPace">—</span></div>
+      <div class="line total"><span>Time to fully funded</span><span id="outTime">—</span></div>
+    </div>
+
+    <div class="verdict" id="verdict"></div>
+  </div>
+
+  <div class="handoff">
+    <span class="dot"></span>
+    <span>Next: put a payoff plan behind your debts, or set a target date for a savings goal.</span>
+    <a href="debt-payoff-calculator.html">Debt payoff →</a>
+    <a href="savings-goal-calculator.html">Savings goal →</a>
+  </div>
+
+  <!-- Below Results Ad -->
+  <div class="ad-label">Advertisement</div>
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="9334818123" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+  <section class="explain">
+    <h2>How this is calculated</h2>
+    <p>The math is straightforward, the judgment is in the inputs.</p>
+    <table class="src-table">
+      <tr><th>Figure</th><th>How it's found</th></tr>
+      <tr><td>Fully funded target</td><td>Monthly essential expenses × target months of coverage</td></tr>
+      <tr><td>Months covered now</td><td>Current savings ÷ monthly essential expenses</td></tr>
+      <tr><td>Gap to close</td><td>Target − current savings (never below zero)</td></tr>
+      <tr><td>Time to fully funded</td><td>Gap ÷ monthly amount saved, rounded up to whole months</td></tr>
+    </table>
+    <p>The time estimate assumes a steady monthly contribution and does not add interest earned on the balance, which for a short-term, safety-first fund is small enough to leave out of a planning estimate.</p>
+
+    <h3>Where the 3-to-6-month guideline comes from</h3>
+    <p>Three to six months of essential expenses is the range most commonly cited in consumer financial education, including materials from the U.S. Consumer Financial Protection Bureau (CFPB) and the FDIC's Money Smart program. It is guidance, not a rule with legal force. A dual-income household with stable jobs may be comfortable at the lower end, a single earner, a commission-based income, or a field with long job searches points toward the higher end or beyond, which is why 9 months and a custom figure are offered.</p>
+
+    <h3>Start small if the full target feels out of reach</h3>
+    <p>The CFPB and most planners suggest building a small starter fund first, often a few hundred to a couple thousand dollars, so an unexpected bill doesn't go on a credit card, then growing it toward the full target over time. A partial fund is far better than none.</p>
+
+    <h3>What this doesn't account for</h3>
+    <ul>
+      <li>Interest or yield earned on the balance (deliberately excluded, it's minor over a short horizon).</li>
+      <li>Irregular income, average it into a monthly figure first.</li>
+      <li>Whether to prioritize the fund over paying down high-interest debt, that's a personal trade-off, not a calculation.</li>
+    </ul>
+  </section>
+
+  <section class="explain faq">
+    <h2>Common questions</h2>
+    <h3>How many months of expenses should an emergency fund cover?</h3>
+    <p>Three to six months of essentials is the common guideline. Single or variable incomes often aim for six to nine or more. It depends on how stable your income is and how fast you could replace it.</p>
+    <h3>What counts as an essential expense?</h3>
+    <p>Anything you'd still owe with no income: housing, utilities, food, transportation, insurance, and minimum debt payments. Discretionary spending is left out because you'd cut it in a real emergency.</p>
+    <h3>Emergency fund or pay off debt first?</h3>
+    <p>Common guidance: a small starter fund first, then high-interest debt, then finish the full fund. The right order for you is a personal decision this tool doesn't make.</p>
+  </section>
+
+  <footer>
+    <p>HouseholdMath provides general estimates for planning purposes only. It is not professional financial, tax, or legal advice. Consult a qualified advisor before making individual financial decisions.</p>
+    <p><a href="index.html">All calculators</a> &middot; <a href="privacy.html">Privacy policy</a></p>
+  </footer>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+
+  const HM_KEY = 'householdmath_v1';
+  function hmLoad() { try { return JSON.parse(sessionStorage.getItem(HM_KEY)) || {}; } catch (e) { return {}; } }
+  function hmSave(patch) { const d = hmLoad(); Object.assign(d, patch); try { sessionStorage.setItem(HM_KEY, JSON.stringify(d)); } catch (e) {} }
+
+  let targetMonths = 6;
+
+  function monthsToText(m) {
+    if (!isFinite(m)) return 'never at $0/mo';
+    if (m <= 0) return 'already there';
+    const whole = Math.ceil(m);
+    if (whole < 12) return whole + (whole === 1 ? ' month' : ' months');
+    const y = Math.floor(whole / 12), mo = whole % 12;
+    let s = y + (y === 1 ? ' year' : ' years');
+    if (mo) s += ' ' + mo + (mo === 1 ? ' month' : ' months');
+    return s;
+  }
+
+  function calc() {
+    const essentials = Math.max(0, parseFloat($('essentials').value) || 0);
+    const current = Math.max(0, parseFloat($('current').value) || 0);
+    const monthlySave = Math.max(0, parseFloat($('monthlySave').value) || 0);
+
+    const target = essentials * targetMonths;
+    const coverage = essentials > 0 ? current / essentials : 0;
+    const gap = Math.max(0, target - current);
+    const surplus = current - target;
+
+    $('targetBig').textContent = fmt(target);
+    $('targetNote').textContent = targetMonths + ' months of essential expenses';
+
+    const fillPct = target > 0 ? Math.min(100, (current / target) * 100) : 0;
+    const cf = $('cbFill');
+    cf.style.width = fillPct + '%';
+    cf.className = 'cb-fill' + (coverage < 3 ? ' low' : '');
+    $('cbNow').textContent = coverage.toFixed(1) + ' months saved';
+    $('cbTarget').textContent = targetMonths + '-month target';
+
+    $('outEssentials').textContent = fmt(essentials) + '/mo';
+    $('outMonths').textContent = targetMonths + ' months';
+    $('outTarget').textContent = fmt(target);
+    $('outCurrent').textContent = fmt(current);
+    $('outCoverage').textContent = coverage.toFixed(1) + (coverage === 1 ? ' month' : ' months');
+
+    if (gap <= 0) {
+      $('gapLabel').textContent = 'Surplus over target';
+      $('outGap').textContent = fmt(surplus);
+      $('outPace').textContent = '—';
+      $('outTime').textContent = 'Fully funded';
+    } else {
+      $('gapLabel').textContent = 'Still to save';
+      $('outGap').textContent = fmt(gap);
+      $('outPace').textContent = monthlySave > 0 ? fmt(monthlySave) + '/mo' : 'not set';
+      $('outTime').textContent = monthlySave > 0 ? monthsToText(gap / monthlySave) : 'enter a monthly amount';
+    }
+
+    const v = $('verdict');
+    if (essentials === 0) {
+      v.className = 'verdict warn';
+      v.innerHTML = 'Enter your monthly essential expenses to size your fund.';
+    } else if (gap <= 0) {
+      v.className = 'verdict good';
+      v.innerHTML = 'Fully funded, you have <strong>' + coverage.toFixed(1) + ' months</strong> of essentials covered, at or above your ' + targetMonths + '-month target.';
+    } else if (coverage < 1) {
+      v.className = 'verdict warn';
+      v.innerHTML = 'Under one month covered. A starter fund is the priority, even <strong>' + fmt(essentials * 0.5) + '</strong> buys real breathing room before the full target.';
+    } else {
+      v.className = 'verdict neutral';
+      const t = monthlySave > 0 ? ', about ' + monthsToText(gap / monthlySave) + ' at ' + fmt(monthlySave) + '/mo' : '';
+      v.innerHTML = 'You have <strong>' + coverage.toFixed(1) + ' months</strong> covered. ' + fmt(gap) + ' more reaches your ' + targetMonths + '-month target' + t + '.';
+    }
+  }
+
+  // Months selector
+  document.querySelectorAll('#monthsSeg button[data-months]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      targetMonths = parseInt(btn.dataset.months);
+      document.querySelectorAll('#monthsSeg button[data-months]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      $('monthsCustom').value = '';
+      calc();
+    });
+  });
+  $('monthsCustom').addEventListener('input', () => {
+    const m = parseInt($('monthsCustom').value);
+    if (m > 0) {
+      targetMonths = m;
+      document.querySelectorAll('#monthsSeg button[data-months]').forEach(b => b.classList.remove('active'));
+      calc();
+    }
+  });
+
+  // Prefill from the budget calculator (same session)
+  function offerPrefill() {
+    const d = hmLoad();
+    const essentialsFromBudget = (d.essentialExpenses != null)
+      ? d.essentialExpenses + (d.debtPayments || 0)
+      : null;
+    if (essentialsFromBudget != null) {
+      const parts = [];
+      parts.push(fmt(essentialsFromBudget) + '/mo');
+      if (d.monthlySavingsCapacity != null) parts.push('and monthly savings of ' + fmt(d.monthlySavingsCapacity));
+      $('pfDetail').textContent = ' (' + parts.join(' ') + ')';
+      $('prefill').classList.add('show');
+      $('prefillApply').addEventListener('click', () => {
+        $('essentials').value = Math.round(essentialsFromBudget);
+        if (d.monthlySavingsCapacity != null && d.monthlySavingsCapacity > 0) {
+          $('monthlySave').value = Math.round(d.monthlySavingsCapacity);
+        }
+        $('prefill').classList.remove('show');
+        calc();
+      });
+      $('prefillDismiss').addEventListener('click', () => $('prefill').classList.remove('show'));
+    }
+  }
+
+  ['essentials','current','monthlySave'].forEach(id => $(id).addEventListener('input', calc));
+  offerPrefill();
+  calc();
+</script>
+
+</body>
+</html>
