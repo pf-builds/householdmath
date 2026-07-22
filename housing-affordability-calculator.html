@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Housing Affordability Calculator — What Home Price Fits Your Income</title>
+<meta name="description" content="Estimate an affordable home price and monthly payment from your income, debts, and down payment using the standard 28/36 debt-to-income rule. Shows which limit binds.">
+<link rel="canonical" href="https://pf-builds.github.io/householdmath/housing-affordability-calculator.html">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to estimate what home price you can afford",
+  "step": [
+    { "@type": "HowToStep", "name": "Enter your gross income", "text": "Enter your annual income before taxes, lenders qualify you on gross, not take-home, pay." },
+    { "@type": "HowToStep", "name": "Enter your existing debt payments", "text": "Add your current monthly debt payments, car, student loans, credit-card minimums, which count against the affordability limit." },
+    { "@type": "HowToStep", "name": "Add your down payment and assumptions", "text": "Enter your down payment, an interest-rate assumption, the loan term, and an estimate of monthly taxes, insurance, and HOA." },
+    { "@type": "HowToStep", "name": "Read the result", "text": "See an affordable price range and monthly payment, and which limit, the 28% housing ratio or the 36% total-debt ratio, is holding you back." }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is the 28/36 rule for home affordability?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It's a common conventional-lending guideline: your monthly housing payment should stay around 28% of gross monthly income (the front-end ratio), and your total monthly debt including housing should stay around 36% (the back-end ratio). This calculator applies whichever limit is stricter for your situation. Lenders vary and some allow higher ratios with strong credit or reserves, so treat it as a planning guide, not an approval."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does the calculator use gross income instead of take-home pay?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Mortgage underwriting measures debt-to-income against gross (pre-tax) income, so an affordability estimate has to use the same basis to be comparable. Your own comfort may be better judged against take-home pay, which is why a payment that qualifies on paper can still feel tight in a real budget. Check it against the budget calculator too."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does this affordability estimate leave out?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Actual approval depends on credit score, employment history, cash reserves, the specific loan program, and mortgage insurance where the down payment is under 20%. Property taxes and insurance vary widely by location and are entered here as an estimate you should confirm locally. This is a planning figure, not a pre-qualification or an offer of credit."
+      }
+    }
+  ]
+}
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #F7F3EC; --panel: #FFFFFF; --ink: #1B2B23; --ink-soft: #5E6E63; --border: #E4DDCF;
+    --forest: #1B3A2F; --forest-bg: #E8EEE8; --gold: #B67F33; --gold-bg: #F4EAD5;
+    --good: #1F6F4C; --good-bg: #E4F1E8; --warn: #A6551D; --warn-bg: #FBEEE3;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  a { color: var(--forest); }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .site-nav { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; padding: 22px 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+  .site-nav .brand-link { color: var(--forest); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; text-decoration: none; }
+  .tools-dropdown { position: relative; }
+  .tools-dropdown summary { cursor: pointer; color: var(--ink-soft); list-style: none; }
+  .tools-dropdown summary::-webkit-details-marker { display: none; }
+  .tools-dropdown summary:hover { color: var(--forest); }
+  .tools-menu { position: absolute; top: 100%; left: 0; margin-top: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 8px; display: flex; flex-direction: column; min-width: 250px; box-shadow: 0 8px 24px rgba(27,58,47,0.14); z-index: 10; }
+  .tools-menu a { padding: 8px 10px; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 0.82rem; }
+  .tools-menu a:hover { background: var(--forest-bg); color: var(--forest); }
+
+  header { margin-bottom: 28px; }
+  h1 { font-family: 'Fraunces', serif; font-weight: 600; font-size: clamp(1.9rem, 4vw, 2.5rem); line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-soft); font-size: 1.04rem; max-width: 60ch; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-bottom: 24px; }
+  .card h2 { font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 600; margin: 0 0 6px; }
+  .card .card-note { color: var(--ink-soft); font-size: 0.88rem; margin: 0 0 20px; }
+
+  .prefill { display: none; align-items: flex-start; gap: 12px; background: var(--gold-bg); border: 1px solid #E6D2AC; border-radius: 10px; padding: 14px 16px; margin-bottom: 22px; font-size: 0.9rem; }
+  .prefill.show { display: flex; }
+  .prefill .pf-body { flex: 1; }
+  .prefill .pf-body strong { color: var(--forest); }
+  .prefill button { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; font-weight: 600; background: var(--forest); color: #fff; border: none; border-radius: 7px; padding: 8px 14px; cursor: pointer; white-space: nowrap; }
+  .prefill button:hover { background: #14231C; }
+  .prefill .dismiss { background: none; color: var(--ink-soft); padding: 8px 6px; }
+
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 0.88rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field .hint { font-size: 0.8rem; color: var(--ink-soft); font-weight: 400; margin-top: 4px; }
+  input[type="number"] { width: 100%; padding: 11px 12px; font-size: 1rem; font-family: 'IBM Plex Mono', monospace; border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--ink); }
+  input[type="number"]:focus { outline: 2px solid var(--forest); outline-offset: 1px; border-color: var(--forest); }
+  .income-field input { border-color: var(--forest); background: var(--forest-bg); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
+
+  .seg { display: flex; gap: 8px; }
+  .seg button { flex: 1; font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; font-weight: 600; background: var(--bg); color: var(--ink-soft); border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 16px; cursor: pointer; }
+  .seg button.active { background: var(--forest); color: #fff; border-color: var(--forest); }
+
+  .ledger { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 12px; }
+  .ledger-head { padding: 20px 28px 4px; }
+  .ledger-head .eyebrow { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+  .headline { padding: 8px 28px 18px; }
+  .headline .big { font-family: 'Fraunces', serif; font-size: 2.3rem; font-weight: 600; color: var(--forest); line-height: 1.1; }
+  .headline .big-note { font-size: 0.9rem; color: var(--ink-soft); margin-top: 4px; }
+
+  .binding { padding: 0 28px 14px; }
+  .binding .chip { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; font-weight: 600; color: var(--gold); background: var(--gold-bg); border: 1px solid #E6D2AC; border-radius: 20px; padding: 4px 12px; }
+
+  .col { padding: 16px 28px 22px; border-top: 1px solid var(--border); background: var(--forest-bg); }
+  .col.plain { background: var(--panel); }
+  .line { display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; padding: 5px 0; color: var(--ink-soft); }
+  .line span:last-child { color: var(--ink); }
+  .line.total { border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 10px; font-weight: 700; color: var(--forest); font-size: 1.05rem; }
+  .line.total span:last-child { color: var(--forest); font-family: 'Fraunces', serif; font-size: 1.15rem; }
+  .col-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; font-weight: 600; margin-bottom: 8px; }
+
+  .verdict { border-radius: 10px; padding: 14px 16px; font-size: 0.92rem; margin: 16px 28px 22px; font-weight: 500; }
+  .verdict.good { background: var(--good-bg); border: 1px solid #BFE0CC; color: var(--good); }
+  .verdict.warn { background: var(--warn-bg); border: 1px solid #E8CBB0; color: var(--warn); }
+  .verdict strong { font-family: 'IBM Plex Mono', monospace; }
+
+  .caveat { background: var(--warn-bg); border: 1px solid #E8CBB0; color: var(--warn); border-radius: 10px; padding: 12px 16px; font-size: 0.86rem; margin-bottom: 24px; }
+  .caveat strong { font-weight: 700; }
+
+  .ad-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); margin: 8px 0 10px; }
+
+  section.explain { margin-top: 48px; }
+  section.explain h2 { font-family: 'Fraunces', serif; font-size: 1.4rem; margin: 0 0 14px; }
+  section.explain h3 { font-size: 1.05rem; margin: 24px 0 8px; }
+  section.explain p { color: var(--ink-soft); font-size: 0.98rem; }
+  section.explain ul { color: var(--ink-soft); font-size: 0.98rem; padding-left: 20px; }
+  .src-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.9rem; }
+  .src-table th, .src-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .src-table th { font-weight: 600; color: var(--ink-soft); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .faq h3 { font-size: 1.02rem; margin: 20px 0 6px; color: var(--ink); }
+  .faq p { color: var(--ink-soft); font-size: 0.95rem; margin: 0; }
+
+  footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 0.82rem; color: var(--ink-soft); }
+  footer a { color: var(--ink-soft); }
+</style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6054690102277779" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="site-nav">
+  <a href="index.html" class="brand-link">HouseholdMath</a>
+  <details class="tools-dropdown">
+    <summary>All calculators &#9662;</summary>
+    <div class="tools-menu">
+      <a href="budget-calculator.html">Household budget</a>
+      <a href="emergency-fund-calculator.html">Emergency fund</a>
+      <a href="debt-payoff-calculator.html">Debt payoff (avalanche vs snowball)</a>
+      <a href="savings-goal-calculator.html">Savings goal &amp; compound growth</a>
+      <a href="housing-affordability-calculator.html">Housing affordability</a>
+    </div>
+  </details>
+</nav>
+
+  <header>
+    <h1>What home price actually fits your income?</h1>
+    <p class="sub">Estimate an affordable price and monthly payment from your income, existing debts, and down payment, using the standard 28/36 debt-to-income rule lenders start from. It shows which limit is holding you back.</p>
+  </header>
+
+  <div class="card">
+    <h2>Your numbers</h2>
+    <p class="card-note">Affordability is measured against gross (pre-tax) income, the same basis a lender uses.</p>
+
+    <div id="prefill" class="prefill">
+      <div class="pf-body">Your <strong>budget</strong> lists <span id="pfAmount"></span>/month in debt payments. Load it as your existing monthly debt?</div>
+      <button id="prefillApply" type="button">Load</button>
+      <button id="prefillDismiss" class="dismiss" type="button">No thanks</button>
+    </div>
+
+    <div class="field income-field">
+      <label for="income">Annual gross income</label>
+      <input type="number" id="income" value="90000" min="0" step="1000">
+      <div class="hint">Total household income before taxes. Not take-home pay, lenders qualify on gross.</div>
+    </div>
+
+    <div class="field">
+      <label for="debts">Existing monthly debt payments</label>
+      <input type="number" id="debts" value="500" min="0" step="25">
+      <div class="hint">Car, student loans, credit-card minimums. Not current rent or utilities.</div>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label for="down">Down payment</label>
+        <input type="number" id="down" value="40000" min="0" step="1000">
+        <div class="hint">Cash toward the purchase.</div>
+      </div>
+      <div class="field">
+        <label for="rate">Interest rate assumption (%)</label>
+        <input type="number" id="rate" value="6.5" min="0" max="20" step="0.1">
+        <div class="hint">A mortgage-rate assumption. Confirm current rates.</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Loan term</label>
+      <div class="seg" id="termSeg">
+        <button type="button" data-term="30" class="active">30 years</button>
+        <button type="button" data-term="15">15 years</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="escrow">Estimated monthly taxes, insurance &amp; HOA</label>
+      <input type="number" id="escrow" value="450" min="0" step="25">
+      <div class="hint">Property tax and insurance vary a lot by location, this is an estimate to confirm locally. It's part of the payment lenders count.</div>
+    </div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head"><div class="eyebrow">Estimated affordable home price</div></div>
+    <div class="headline">
+      <div class="big" id="priceBig">—</div>
+      <div class="big-note" id="priceNote">—</div>
+    </div>
+    <div class="binding"><span class="chip" id="bindingChip">—</span></div>
+
+    <div class="col">
+      <div class="col-title">Monthly payment at this price</div>
+      <div class="line"><span>Principal &amp; interest</span><span id="outPI">—</span></div>
+      <div class="line"><span>Taxes, insurance &amp; HOA</span><span id="outEscrow">—</span></div>
+      <div class="line total"><span>Total housing payment</span><span id="outPITI">—</span></div>
+    </div>
+
+    <div class="col plain">
+      <div class="col-title">How the limits apply</div>
+      <div class="line"><span>Gross monthly income</span><span id="outGross">—</span></div>
+      <div class="line"><span>Housing limit (28% front-end)</span><span id="outFront">—</span></div>
+      <div class="line"><span>Total-debt limit (36% back-end)</span><span id="outBack">—</span></div>
+      <div class="line"><span>Less existing debt payments</span><span id="outDebtLine">—</span></div>
+      <div class="line total"><span>Max loan amount</span><span id="outLoan">—</span></div>
+    </div>
+
+    <div class="verdict" id="verdict"></div>
+  </div>
+
+  <div class="caveat">
+    <strong>Lender underwriting varies.</strong> Real approval also weighs your credit score, employment history, cash reserves, and loan program, and adds mortgage insurance when the down payment is under 20%. This is a planning estimate, not a pre-qualification or an offer of credit.
+  </div>
+
+  <!-- Below Results Ad -->
+  <div class="ad-label">Advertisement</div>
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="9334818123" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+  <section class="explain">
+    <h2>How this is calculated</h2>
+    <p>The estimate applies the 28/36 rule, a long-standing conventional-lending guideline, and uses whichever of the two limits is stricter for you.</p>
+    <table class="src-table">
+      <tr><th>Limit</th><th>What it means</th></tr>
+      <tr><td>Front-end, 28%</td><td>Total monthly housing payment (principal, interest, taxes, insurance, HOA) stays at or below 28% of gross monthly income.</td></tr>
+      <tr><td>Back-end, 36%</td><td>All monthly debt, housing plus car, student, and card payments, stays at or below 36% of gross monthly income.</td></tr>
+    </table>
+    <p>The calculator takes the smaller of the two resulting housing payments, subtracts your estimated taxes, insurance, and HOA to isolate principal and interest, then works backward through the standard mortgage-payment formula at your rate and term to find the loan you can support. Adding your down payment gives the price. The 28/36 thresholds are widely published in consumer lending education, including CFPB materials; some loan programs allow higher back-end ratios (often up to 43% or more) with strong credit or reserves, which is why real approvals can differ from this guide.</p>
+
+    <h3>Gross income, not take-home</h3>
+    <p>Lenders measure these ratios against gross, pre-tax income, so the estimate does too. Your monthly comfort is better measured against take-home pay, a payment that qualifies on paper can still strain an actual budget. It's worth checking the resulting payment against the <a href="budget-calculator.html">budget calculator</a> on a take-home basis.</p>
+
+    <h3>What this doesn't account for</h3>
+    <ul>
+      <li>Credit score, employment history, and cash reserves, all of which affect approval and rate.</li>
+      <li>Private mortgage insurance (PMI), typically required with less than 20% down.</li>
+      <li>Local property-tax and insurance rates, entered here as an estimate to confirm for your area.</li>
+      <li>Closing costs and maintenance, ongoing costs of ownership beyond the loan.</li>
+    </ul>
+  </section>
+
+  <section class="explain faq">
+    <h2>Common questions</h2>
+    <h3>What is the 28/36 rule?</h3>
+    <p>Housing payment at or below 28% of gross monthly income, total debt at or below 36%. A common conventional guideline; the calculator uses whichever is stricter for you. Lenders vary and some allow more.</p>
+    <h3>Why gross income, not take-home?</h3>
+    <p>Underwriting measures debt-to-income on gross pay, so the estimate matches. A qualifying payment can still feel tight against take-home, check it in the budget calculator too.</p>
+    <h3>What does this leave out?</h3>
+    <p>Credit, reserves, loan program, PMI under 20% down, and local tax and insurance rates. It's a planning figure, not a pre-qualification.</p>
+  </section>
+
+  <footer>
+    <p>HouseholdMath provides general estimates for planning purposes only. It is not professional financial, tax, lending, or legal advice, and is not a pre-qualification or offer of credit. Consult a qualified advisor or lender before making individual financial decisions.</p>
+    <p><a href="index.html">All calculators</a> &middot; <a href="privacy.html">Privacy policy</a></p>
+  </footer>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+
+  const HM_KEY = 'householdmath_v1';
+  function hmLoad() { try { return JSON.parse(sessionStorage.getItem(HM_KEY)) || {}; } catch (e) { return {}; } }
+
+  let term = 30;
+
+  function loanFromPayment(pi, rate, months) {
+    const i = rate / 100 / 12;
+    if (pi <= 0) return 0;
+    if (i === 0) return pi * months;
+    return pi * (1 - Math.pow(1 + i, -months)) / i;
+  }
+
+  function calc() {
+    const annual = Math.max(0, parseFloat($('income').value) || 0);
+    const existingDebt = Math.max(0, parseFloat($('debts').value) || 0);
+    const down = Math.max(0, parseFloat($('down').value) || 0);
+    const rate = Math.max(0, parseFloat($('rate').value) || 0);
+    const escrow = Math.max(0, parseFloat($('escrow').value) || 0);
+
+    const grossMonthly = annual / 12;
+    const frontCap = grossMonthly * 0.28;
+    const backCap = grossMonthly * 0.36 - existingDebt;
+    const pitiMax = Math.max(0, Math.min(frontCap, backCap));
+    const piMax = Math.max(0, pitiMax - escrow);
+    const loan = loanFromPayment(piMax, rate, term * 12);
+    const price = loan + down;
+
+    const binding = frontCap <= backCap ? 'front' : 'back';
+
+    $('outGross').textContent = fmt(grossMonthly);
+    $('outFront').textContent = fmt(frontCap);
+    $('outBack').textContent = fmt(grossMonthly * 0.36);
+    $('outDebtLine').textContent = '-' + fmt(existingDebt);
+    $('outLoan').textContent = fmt(loan);
+
+    $('outPI').textContent = fmt(piMax) + '/mo';
+    $('outEscrow').textContent = fmt(escrow) + '/mo';
+    $('outPITI').textContent = fmt(pitiMax) + '/mo';
+
+    $('priceBig').textContent = fmt(price);
+    $('priceNote').textContent = 'with ' + fmt(down) + ' down at ' + rate + '% over ' + term + ' years';
+
+    const v = $('verdict');
+    const chip = $('bindingChip');
+
+    if (grossMonthly <= 0) {
+      chip.textContent = '—';
+      $('priceBig').textContent = '—';
+      v.className = 'verdict warn';
+      v.innerHTML = 'Enter your annual gross income to estimate an affordable price.';
+      return;
+    }
+
+    if (backCap <= 0) {
+      chip.textContent = 'Existing debt over the 36% limit';
+      $('priceBig').textContent = fmt(down);
+      $('priceNote').textContent = 'existing debt uses up the affordability limit';
+      v.className = 'verdict warn';
+      v.innerHTML = 'Your existing debt payments of <strong>' + fmt(existingDebt) + '/mo</strong> already reach the 36% total-debt limit (' + fmt(grossMonthly * 0.36) + '). Paying some down first would open up room, the <a href="debt-payoff-calculator.html">debt payoff calculator</a> can help.';
+      return;
+    }
+
+    if (piMax <= 0) {
+      chip.textContent = 'Taxes & insurance exceed the housing limit';
+      $('priceBig').textContent = fmt(down);
+      v.className = 'verdict warn';
+      v.innerHTML = 'Your estimated taxes, insurance, and HOA of <strong>' + fmt(escrow) + '/mo</strong> already use the whole housing budget of ' + fmt(pitiMax) + '. Only the down payment applies until income rises or that estimate drops.';
+      return;
+    }
+
+    chip.textContent = binding === 'front'
+      ? 'Limited by the 28% housing ratio'
+      : 'Limited by the 36% total-debt ratio';
+
+    v.className = 'verdict good';
+    if (binding === 'front') {
+      v.innerHTML = 'At this income, the <strong>28% housing limit</strong> sets your ceiling: a total housing payment around <strong>' + fmt(pitiMax) + '/mo</strong>, supporting a home near <strong>' + fmt(price) + '</strong>. Your existing debt isn\'t the constraint here.';
+    } else {
+      v.innerHTML = 'Your existing <strong>' + fmt(existingDebt) + '/mo</strong> in debt makes the <strong>36% total-debt limit</strong> the binding one, holding the housing payment to about <strong>' + fmt(pitiMax) + '/mo</strong>. Reducing that debt would raise what you can afford.';
+    }
+  }
+
+  document.querySelectorAll('#termSeg button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      term = parseInt(btn.dataset.term);
+      document.querySelectorAll('#termSeg button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      calc();
+    });
+  });
+
+  ['income','debts','down','rate','escrow'].forEach(id => $(id).addEventListener('input', calc));
+
+  function offerPrefill() {
+    const d = hmLoad();
+    if (d && d.debtPayments != null && d.debtPayments > 0) {
+      $('pfAmount').textContent = fmt(d.debtPayments);
+      $('prefill').classList.add('show');
+      $('prefillApply').addEventListener('click', () => {
+        $('debts').value = Math.round(d.debtPayments);
+        $('prefill').classList.remove('show');
+        calc();
+      });
+      $('prefillDismiss').addEventListener('click', () => $('prefill').classList.remove('show'));
+    }
+  }
+
+  offerPrefill();
+  calc();
+</script>
+
+</body>
+</html>
