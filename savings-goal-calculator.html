@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Savings Goal &amp; Compound Growth Calculator — Monthly Amount or Timeline</title>
+<meta name="description" content="Find the monthly contribution to reach a savings goal by a target date, or how long a set contribution takes, with contributions and compound growth shown separately.">
+<link rel="canonical" href="https://pf-builds.github.io/householdmath/savings-goal-calculator.html">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to calculate a savings goal",
+  "step": [
+    { "@type": "HowToStep", "name": "Enter your goal and starting balance", "text": "Enter the amount you're aiming for and anything you've already saved toward it." },
+    { "@type": "HowToStep", "name": "Choose what to solve for", "text": "Solve for the monthly contribution needed by a target date, or for how long a chosen monthly contribution will take." },
+    { "@type": "HowToStep", "name": "Set a return assumption", "text": "Enter the annual return you expect on the money, clearly an assumption, not a guarantee, matched to where you'll keep it." },
+    { "@type": "HowToStep", "name": "Read the split", "text": "See the result along with how much comes from your own contributions versus compound growth." }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What annual return should I assume for a savings goal?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Match the assumption to where the money will actually sit. Cash and short-term savings have historically earned low single-digit rates, the FDIC publishes national deposit averages. Money invested in a diversified portfolio for the long term has historically earned more, but with real risk of loss and no guarantee. The return you enter is an assumption for planning, not a promise, and a lower assumption gives a safer plan."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does compound growth change how much I need to save?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Growth does part of the work for you: the earlier and longer money sits, the more of your goal comes from returns rather than your own deposits. Over short horizons the effect is small and most of the goal is your contributions. Over long horizons it can be a large share. This calculator shows the split so you can see how much you're relying on growth versus saving."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does this savings calculator assume?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It compounds monthly at your annual return divided by twelve and assumes level contributions made at the end of each month, a standard planning approximation. It doesn't account for taxes, fees, inflation, or variable returns, actual investment returns move up and down and can be negative in any given year. Treat the result as an estimate, not a projection of guaranteed value."
+      }
+    }
+  ]
+}
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #F7F3EC; --panel: #FFFFFF; --ink: #1B2B23; --ink-soft: #5E6E63; --border: #E4DDCF;
+    --forest: #1B3A2F; --forest-bg: #E8EEE8; --gold: #B67F33; --gold-bg: #F4EAD5;
+    --good: #1F6F4C; --good-bg: #E4F1E8; --warn: #A6551D; --warn-bg: #FBEEE3;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  a { color: var(--forest); }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .site-nav { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; padding: 22px 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+  .site-nav .brand-link { color: var(--forest); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; text-decoration: none; }
+  .tools-dropdown { position: relative; }
+  .tools-dropdown summary { cursor: pointer; color: var(--ink-soft); list-style: none; }
+  .tools-dropdown summary::-webkit-details-marker { display: none; }
+  .tools-dropdown summary:hover { color: var(--forest); }
+  .tools-menu { position: absolute; top: 100%; left: 0; margin-top: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 8px; display: flex; flex-direction: column; min-width: 250px; box-shadow: 0 8px 24px rgba(27,58,47,0.14); z-index: 10; }
+  .tools-menu a { padding: 8px 10px; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 0.82rem; }
+  .tools-menu a:hover { background: var(--forest-bg); color: var(--forest); }
+
+  header { margin-bottom: 28px; }
+  h1 { font-family: 'Fraunces', serif; font-weight: 600; font-size: clamp(1.9rem, 4vw, 2.5rem); line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-soft); font-size: 1.04rem; max-width: 60ch; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-bottom: 24px; }
+  .card h2 { font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 600; margin: 0 0 6px; }
+  .card .card-note { color: var(--ink-soft); font-size: 0.88rem; margin: 0 0 20px; }
+
+  .prefill { display: none; align-items: flex-start; gap: 12px; background: var(--gold-bg); border: 1px solid #E6D2AC; border-radius: 10px; padding: 14px 16px; margin-bottom: 22px; font-size: 0.9rem; }
+  .prefill.show { display: flex; }
+  .prefill .pf-body { flex: 1; }
+  .prefill .pf-body strong { color: var(--forest); }
+  .prefill button { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; font-weight: 600; background: var(--forest); color: #fff; border: none; border-radius: 7px; padding: 8px 14px; cursor: pointer; white-space: nowrap; }
+  .prefill button:hover { background: #14231C; }
+  .prefill .dismiss { background: none; color: var(--ink-soft); padding: 8px 6px; }
+
+  .mode-toggle { display: flex; gap: 8px; margin-bottom: 24px; }
+  .mode-toggle button { flex: 1; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; background: var(--bg); color: var(--ink-soft); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; cursor: pointer; }
+  .mode-toggle button.active { background: var(--forest); color: #fff; border-color: var(--forest); }
+
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 0.88rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field .hint { font-size: 0.8rem; color: var(--ink-soft); font-weight: 400; margin-top: 4px; }
+  input[type="number"] { width: 100%; padding: 11px 12px; font-size: 1rem; font-family: 'IBM Plex Mono', monospace; border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--ink); }
+  input[type="number"]:focus { outline: 2px solid var(--forest); outline-offset: 1px; border-color: var(--forest); }
+  .goal-field input { border-color: var(--forest); background: var(--forest-bg); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
+
+  .return-presets { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .return-presets button { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; background: var(--bg); color: var(--ink-soft); border: 1.5px solid var(--border); border-radius: 7px; padding: 6px 12px; cursor: pointer; }
+  .return-presets button:hover { border-color: var(--forest); color: var(--forest); }
+  .assumption-note { font-size: 0.8rem; color: var(--warn); background: var(--warn-bg); border: 1px solid #E8CBB0; border-radius: 8px; padding: 10px 12px; margin-top: 10px; }
+
+  .ledger { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 12px; }
+  .ledger-head { padding: 20px 28px 4px; }
+  .ledger-head .eyebrow { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+  .headline { padding: 8px 28px 18px; }
+  .headline .big { font-family: 'Fraunces', serif; font-size: 2.3rem; font-weight: 600; color: var(--forest); line-height: 1.1; }
+  .headline .big-note { font-size: 0.9rem; color: var(--ink-soft); margin-top: 4px; }
+
+  .split-bar { padding: 4px 28px 8px; }
+  .sb-track { display: flex; height: 26px; border-radius: 7px; overflow: hidden; border: 1px solid var(--border); }
+  .sb-contrib { background: var(--forest); }
+  .sb-growth { background: var(--gold); }
+  .sb-legend { display: flex; gap: 20px; margin-top: 10px; font-size: 0.82rem; font-family: 'IBM Plex Mono', monospace; color: var(--ink-soft); }
+  .sb-legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+  .sw.c { background: var(--forest); } .sw.g { background: var(--gold); }
+
+  .col { padding: 16px 28px 22px; border-top: 1px solid var(--border); background: var(--forest-bg); }
+  .line { display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; padding: 5px 0; color: var(--ink-soft); }
+  .line span:last-child { color: var(--ink); }
+  .line.total { border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 10px; font-weight: 700; color: var(--forest); font-size: 1.05rem; }
+  .line.total span:last-child { color: var(--forest); font-family: 'Fraunces', serif; font-size: 1.15rem; }
+
+  .verdict { border-radius: 10px; padding: 14px 16px; font-size: 0.92rem; margin: 16px 28px 22px; font-weight: 500; }
+  .verdict.good { background: var(--good-bg); border: 1px solid #BFE0CC; color: var(--good); }
+  .verdict.warn { background: var(--warn-bg); border: 1px solid #E8CBB0; color: var(--warn); }
+  .verdict strong { font-family: 'IBM Plex Mono', monospace; }
+
+  .handoff { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--forest-bg); border: 1px solid #CADBCB; border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; font-size: 0.88rem; color: var(--ink); }
+  .handoff .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); flex-shrink: 0; }
+  .handoff a { font-weight: 600; }
+
+  .ad-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); margin: 8px 0 10px; }
+
+  section.explain { margin-top: 48px; }
+  section.explain h2 { font-family: 'Fraunces', serif; font-size: 1.4rem; margin: 0 0 14px; }
+  section.explain h3 { font-size: 1.05rem; margin: 24px 0 8px; }
+  section.explain p { color: var(--ink-soft); font-size: 0.98rem; }
+  section.explain ul { color: var(--ink-soft); font-size: 0.98rem; padding-left: 20px; }
+  .src-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.9rem; }
+  .src-table th, .src-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .src-table th { font-weight: 600; color: var(--ink-soft); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .faq h3 { font-size: 1.02rem; margin: 20px 0 6px; color: var(--ink); }
+  .faq p { color: var(--ink-soft); font-size: 0.95rem; margin: 0; }
+
+  footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 0.82rem; color: var(--ink-soft); }
+  footer a { color: var(--ink-soft); }
+</style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6054690102277779" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="site-nav">
+  <a href="index.html" class="brand-link">HouseholdMath</a>
+  <details class="tools-dropdown">
+    <summary>All calculators &#9662;</summary>
+    <div class="tools-menu">
+      <a href="budget-calculator.html">Household budget</a>
+      <a href="emergency-fund-calculator.html">Emergency fund</a>
+      <a href="debt-payoff-calculator.html">Debt payoff (avalanche vs snowball)</a>
+      <a href="savings-goal-calculator.html">Savings goal &amp; compound growth</a>
+      <a href="housing-affordability-calculator.html">Housing affordability</a>
+    </div>
+  </details>
+</nav>
+
+  <header>
+    <h1>What will it take to reach your savings goal?</h1>
+    <p class="sub">Solve for the monthly amount to hit a goal by a target date, or for how long a set contribution will take. Either way, see how much of the goal comes from your own deposits versus compound growth.</p>
+  </header>
+
+  <div class="card">
+    <h2>Your goal</h2>
+    <p class="card-note">Growth is projected on an assumption you choose, not a guaranteed return. A lower assumption gives a safer plan.</p>
+
+    <div id="prefill" class="prefill">
+      <div class="pf-body">Your <strong>budget</strong> shows about <span id="pfAmount"></span>/month available to save. Use it as your monthly contribution?</div>
+      <button id="prefillApply" type="button">Load</button>
+      <button id="prefillDismiss" class="dismiss" type="button">No thanks</button>
+    </div>
+
+    <div class="mode-toggle" id="modeToggle">
+      <button type="button" data-mode="contribution" class="active">Find my monthly amount</button>
+      <button type="button" data-mode="time">Find my timeline</button>
+    </div>
+
+    <div class="field goal-field">
+      <label for="goal">Savings goal</label>
+      <input type="number" id="goal" value="30000" min="0" step="500">
+      <div class="hint">The total amount you're aiming for.</div>
+    </div>
+
+    <div class="field">
+      <label for="starting">Starting balance</label>
+      <input type="number" id="starting" value="2000" min="0" step="100">
+      <div class="hint">What you've already saved toward this goal. Enter 0 if starting fresh.</div>
+    </div>
+
+    <div class="field" id="fieldYears">
+      <label for="years">Target timeframe (years)</label>
+      <input type="number" id="years" value="5" min="0.5" step="0.5">
+      <div class="hint">How many years from now you want to reach the goal.</div>
+    </div>
+
+    <div class="field" id="fieldContribution" style="display:none;">
+      <label for="contribution">Monthly contribution</label>
+      <input type="number" id="contribution" value="400" min="0" step="25">
+      <div class="hint">What you can set aside each month toward the goal.</div>
+    </div>
+
+    <div class="field">
+      <label for="return">Expected annual return (assumption)</label>
+      <input type="number" id="return" value="4" min="0" max="20" step="0.1">
+      <div class="return-presets" id="returnPresets">
+        <button type="button" data-r="0">0% (cash)</button>
+        <button type="button" data-r="2">2%</button>
+        <button type="button" data-r="4">4%</button>
+        <button type="button" data-r="6">6%</button>
+      </div>
+      <div class="assumption-note">This is an assumption, not a promise. Cash and short-term savings have historically earned low single digits; longer-term investing has historically earned more but can lose value in any year. Match it to where you'll keep the money.</div>
+    </div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head"><div class="eyebrow" id="resultEyebrow">Required monthly contribution</div></div>
+    <div class="headline">
+      <div class="big" id="resultBig">—</div>
+      <div class="big-note" id="resultNote">—</div>
+    </div>
+
+    <div class="split-bar">
+      <div class="sb-track"><div class="sb-contrib" id="sbContrib" style="width:60%;"></div><div class="sb-growth" id="sbGrowth" style="width:40%;"></div></div>
+      <div class="sb-legend">
+        <span><span class="sw c"></span>Your contributions <span id="legContrib" style="color:var(--ink);"></span></span>
+        <span><span class="sw g"></span>Compound growth <span id="legGrowth" style="color:var(--ink);"></span></span>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="line"><span>Starting balance</span><span id="outStarting">—</span></div>
+      <div class="line"><span>Your total contributions</span><span id="outContrib">—</span></div>
+      <div class="line"><span>Compound growth</span><span id="outGrowth">—</span></div>
+      <div class="line total"><span>Ending balance</span><span id="outEnding">—</span></div>
+    </div>
+
+    <div class="verdict" id="verdict"></div>
+  </div>
+
+  <div class="handoff">
+    <span class="dot"></span>
+    <span>Building an emergency fund is usually the first savings goal. Size it here.</span>
+    <a href="emergency-fund-calculator.html">Emergency fund →</a>
+  </div>
+
+  <!-- Below Results Ad -->
+  <div class="ad-label">Advertisement</div>
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="9334818123" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+  <section class="explain">
+    <h2>How this is calculated</h2>
+    <p>The calculator uses the standard future-value formula for a starting balance plus level monthly contributions, compounding monthly at your annual return divided by twelve.</p>
+    <table class="src-table">
+      <tr><th>Solving for</th><th>What it finds</th></tr>
+      <tr><td>Monthly amount</td><td>The contribution needed so your starting balance plus deposits and growth reaches the goal in your timeframe.</td></tr>
+      <tr><td>Timeline</td><td>How many months your chosen contribution takes to reach the goal, given the return assumption.</td></tr>
+    </table>
+    <p>Compound growth is whatever the ending balance exceeds your starting balance and total contributions. The U.S. Securities and Exchange Commission's Investor.gov explains this compounding effect and stresses that past returns never guarantee future results, which is why the return here is an input you set, not a fixed figure.</p>
+
+    <h3>Choosing a return assumption</h3>
+    <p>The right assumption depends entirely on where the money lives. Money in cash or short-term savings has historically earned low single-digit rates, the FDIC publishes national deposit-rate averages you can check. Money invested in a diversified long-term portfolio has historically earned more over long periods, but with real risk of loss and no guarantee in any given year. When in doubt, a lower assumption produces a more conservative, safer plan. This tool does not recommend any account, product, or investment.</p>
+
+    <h3>What this doesn't account for</h3>
+    <ul>
+      <li>Taxes on interest, dividends, or gains.</li>
+      <li>Account fees, which reduce real returns.</li>
+      <li>Inflation, a dollar in the future buys less than a dollar today.</li>
+      <li>Return variability, real markets move up and down rather than growing at a steady rate.</li>
+    </ul>
+  </section>
+
+  <section class="explain faq">
+    <h2>Common questions</h2>
+    <h3>What return should I assume?</h3>
+    <p>Match it to where the money sits. Cash and short-term savings: low single digits (check FDIC national averages). Long-term diversified investing: historically more, but with risk and no guarantee. Lower assumptions make a safer plan.</p>
+    <h3>How does compound growth change what I need?</h3>
+    <p>Growth does part of the work, more so the longer money sits. Short-term goals are mostly your own contributions; long-term goals lean more on growth. The split is shown in the result.</p>
+    <h3>What does this assume?</h3>
+    <p>Monthly compounding, level end-of-month contributions, and no taxes, fees, or inflation. It's a planning estimate, not a projection of guaranteed value.</p>
+  </section>
+
+  <footer>
+    <p>HouseholdMath provides general estimates for planning purposes only. It is not professional financial, tax, or legal advice, and does not recommend any account, product, or investment. Consult a qualified advisor before making individual financial decisions.</p>
+    <p><a href="index.html">All calculators</a> &middot; <a href="privacy.html">Privacy policy</a></p>
+  </footer>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+
+  const HM_KEY = 'householdmath_v1';
+  function hmLoad() { try { return JSON.parse(sessionStorage.getItem(HM_KEY)) || {}; } catch (e) { return {}; } }
+
+  let mode = 'contribution';
+
+  function monthsToText(m) {
+    m = Math.ceil(m);
+    if (m <= 0) return 'now';
+    const y = Math.floor(m / 12), mo = m % 12;
+    if (y === 0) return mo + (mo === 1 ? ' month' : ' months');
+    let s = y + (y === 1 ? ' year' : ' years');
+    if (mo) s += ' ' + mo + (mo === 1 ? ' month' : ' months');
+    return s;
+  }
+
+  function renderSplit(startBal, contribTotal, growth, ending) {
+    $('outStarting').textContent = fmt(startBal);
+    $('outContrib').textContent = fmt(contribTotal);
+    $('outGrowth').textContent = fmt(growth);
+    $('outEnding').textContent = fmt(ending);
+
+    // split bar: contributions (start + deposits) vs growth
+    const ownMoney = startBal + contribTotal;
+    const total = ownMoney + Math.max(0, growth);
+    const cPct = total > 0 ? (ownMoney / total) * 100 : 100;
+    const gPct = 100 - cPct;
+    $('sbContrib').style.width = cPct + '%';
+    $('sbGrowth').style.width = gPct + '%';
+    $('legContrib').textContent = fmt(ownMoney) + ' (' + cPct.toFixed(0) + '%)';
+    $('legGrowth').textContent = fmt(Math.max(0, growth)) + ' (' + gPct.toFixed(0) + '%)';
+  }
+
+  function calc() {
+    const goal = Math.max(0, parseFloat($('goal').value) || 0);
+    const startBal = Math.max(0, parseFloat($('starting').value) || 0);
+    const annual = Math.max(0, parseFloat($('return').value) || 0);
+    const i = annual / 100 / 12;
+    const v = $('verdict');
+
+    if (mode === 'contribution') {
+      const years = Math.max(0, parseFloat($('years').value) || 0);
+      const n = Math.round(years * 12);
+      $('resultEyebrow').textContent = 'Required monthly contribution';
+
+      if (goal <= 0 || n <= 0) {
+        $('resultBig').textContent = '—';
+        $('resultNote').textContent = 'Enter a goal and a timeframe.';
+        renderSplit(startBal, 0, 0, startBal);
+        v.className = 'verdict warn'; v.innerHTML = 'Enter a goal amount and a target timeframe to solve for the monthly contribution.';
+        return;
+      }
+
+      const growthFactor = Math.pow(1 + i, n);
+      const startFV = startBal * growthFactor;
+      let pmt;
+      if (i === 0) pmt = (goal - startBal) / n;
+      else pmt = (goal - startFV) / ((growthFactor - 1) / i);
+
+      if (pmt <= 0) {
+        $('resultBig').textContent = fmt(0) + '/mo';
+        $('resultNote').textContent = 'Your starting balance alone reaches the goal in ' + monthsToText(n) + '.';
+        const ending = startFV;
+        renderSplit(startBal, 0, ending - startBal, ending);
+        v.className = 'verdict good';
+        v.innerHTML = 'At ' + annual + '% your <strong>' + fmt(startBal) + '</strong> starting balance grows past <strong>' + fmt(goal) + '</strong> on its own within ' + monthsToText(n) + '. No monthly contribution required.';
+        return;
+      }
+
+      const contribTotal = pmt * n;
+      const ending = startFV + pmt * ((i === 0) ? n : (growthFactor - 1) / i);
+      const growth = ending - startBal - contribTotal;
+      $('resultBig').textContent = fmt(pmt) + '/mo';
+      $('resultNote').textContent = 'to reach ' + fmt(goal) + ' in ' + monthsToText(n) + ' at ' + annual + '% assumed return';
+      renderSplit(startBal, contribTotal, growth, ending);
+
+      v.className = 'verdict good';
+      const gShare = growth / (ending || 1) * 100;
+      v.innerHTML = 'Save <strong>' + fmt(pmt) + '/mo</strong> for ' + monthsToText(n) + '. Compound growth covers <strong>' + fmt(Math.max(0, growth)) + '</strong> of the goal (' + gShare.toFixed(0) + '%), the rest is what you put in.';
+
+    } else {
+      const contribution = Math.max(0, parseFloat($('contribution').value) || 0);
+      $('resultEyebrow').textContent = 'Time to reach your goal';
+
+      if (goal <= 0) {
+        $('resultBig').textContent = '—';
+        $('resultNote').textContent = 'Enter a goal.';
+        renderSplit(startBal, 0, 0, startBal);
+        v.className = 'verdict warn'; v.innerHTML = 'Enter a goal amount to solve for the timeline.';
+        return;
+      }
+      if (startBal >= goal) {
+        $('resultBig').textContent = 'Already there';
+        $('resultNote').textContent = 'Your starting balance already meets the goal.';
+        renderSplit(startBal, 0, 0, startBal);
+        v.className = 'verdict good'; v.innerHTML = 'Your <strong>' + fmt(startBal) + '</strong> starting balance already meets the <strong>' + fmt(goal) + '</strong> goal.';
+        return;
+      }
+      if (contribution <= 0 && i === 0) {
+        $('resultBig').textContent = 'Never';
+        $('resultNote').textContent = 'With no contribution and no growth, the balance stays flat.';
+        renderSplit(startBal, 0, 0, startBal);
+        v.className = 'verdict warn'; v.innerHTML = 'With no monthly contribution and a 0% return, the balance never reaches the goal. Add a contribution or a return assumption.';
+        return;
+      }
+
+      let n;
+      if (i === 0) n = (goal - startBal) / contribution;
+      else {
+        const num = goal + contribution / i;
+        const den = startBal + contribution / i;
+        n = Math.log(num / den) / Math.log(1 + i);
+      }
+
+      if (!isFinite(n) || n > 1200) {
+        $('resultBig').textContent = 'Over 100 years';
+        $('resultNote').textContent = 'Raise the contribution or the return assumption.';
+        renderSplit(startBal, contribution * 1200, 0, startBal);
+        v.className = 'verdict warn'; v.innerHTML = 'At <strong>' + fmt(contribution) + '/mo</strong> and ' + annual + '%, reaching <strong>' + fmt(goal) + '</strong> takes over 100 years. Raise the monthly amount or the return.';
+        return;
+      }
+
+      const nWhole = Math.ceil(n);
+      const contribTotal = contribution * nWhole;
+      const growthFactor = Math.pow(1 + i, nWhole);
+      const ending = startBal * growthFactor + (i === 0 ? contribution * nWhole : contribution * ((growthFactor - 1) / i));
+      const growth = ending - startBal - contribTotal;
+
+      $('resultBig').textContent = monthsToText(n);
+      $('resultNote').textContent = 'saving ' + fmt(contribution) + '/mo toward ' + fmt(goal) + ' at ' + annual + '% assumed return';
+      renderSplit(startBal, contribTotal, growth, ending);
+
+      v.className = 'verdict good';
+      const gShare = growth / (ending || 1) * 100;
+      v.innerHTML = '<strong>' + monthsToText(n) + '</strong> at ' + fmt(contribution) + '/mo. Compound growth contributes <strong>' + fmt(Math.max(0, growth)) + '</strong> (' + gShare.toFixed(0) + '%) toward the goal.';
+    }
+  }
+
+  // mode toggle
+  document.querySelectorAll('#modeToggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      mode = btn.dataset.mode;
+      document.querySelectorAll('#modeToggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      $('fieldYears').style.display = mode === 'contribution' ? 'block' : 'none';
+      $('fieldContribution').style.display = mode === 'time' ? 'block' : 'none';
+      calc();
+    });
+  });
+
+  // return presets
+  document.querySelectorAll('#returnPresets button').forEach(btn => {
+    btn.addEventListener('click', () => { $('return').value = btn.dataset.r; calc(); });
+  });
+
+  ['goal','starting','years','contribution','return'].forEach(id => $(id).addEventListener('input', calc));
+
+  // prefill monthly contribution from budget capacity (switches to time mode)
+  function offerPrefill() {
+    const d = hmLoad();
+    if (d && d.monthlySavingsCapacity != null && d.monthlySavingsCapacity > 0) {
+      $('pfAmount').textContent = fmt(d.monthlySavingsCapacity);
+      $('prefill').classList.add('show');
+      $('prefillApply').addEventListener('click', () => {
+        $('contribution').value = Math.round(d.monthlySavingsCapacity);
+        // switch to "find my timeline" mode since we now have a contribution
+        document.querySelector('#modeToggle button[data-mode="time"]').click();
+        $('prefill').classList.remove('show');
+      });
+      $('prefillDismiss').addEventListener('click', () => $('prefill').classList.remove('show'));
+    }
+  }
+
+  offerPrefill();
+  calc();
+</script>
+
+</body>
+</html>
