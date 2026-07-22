@@ -157,8 +157,8 @@
   }
 
   /* Build-mode itemized rows */
-  .build-group { margin-bottom: 10px; }
-  .build-head, .build-row { display: grid; grid-template-columns: 1.7fr 1fr 1.1fr 34px; gap: 10px; align-items: center; }
+  .build-group { margin-bottom: 14px; }
+  .build-head, .build-row { display: grid; grid-template-columns: 1.4fr 0.85fr 0.95fr 1fr 34px; gap: 10px; align-items: center; }
   .build-head { margin-bottom: 8px; }
   .build-head span { font-size: 0.72rem; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
   .build-item { margin-bottom: 12px; }
@@ -169,15 +169,21 @@
     border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--ink);
   }
   .build-row input.b-label { font-family: 'Inter', sans-serif; }
-  .build-row select.b-freq { font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer; }
+  .build-row select.b-freq, .build-row select.b-bucket { font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer; }
   .build-row .b-remove {
     background: none; border: none; color: var(--ink-soft); font-size: 1.3rem; cursor: pointer; line-height: 1; padding: 4px; border-radius: 6px;
   }
   .build-row .b-remove:hover { color: var(--warn); background: var(--warn-bg); }
+  .add-item {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; font-weight: 600; color: var(--forest);
+    background: var(--forest-bg); border: 1px dashed #9DBBA6; border-radius: 8px; padding: 8px 14px; cursor: pointer; margin-top: 2px;
+  }
+  .add-item:hover { background: #DCE8DD; }
   @media (max-width: 560px) {
     .build-head { display: none; }
     .build-row { grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; position: relative; }
     .build-row .b-label { grid-column: 1 / -1; }
+    .build-row .b-bucket { grid-column: 1 / -1; }
     .build-row .b-remove { position: absolute; top: 6px; right: 6px; }
   }
 
@@ -457,6 +463,8 @@
   }
 
   // --- BUILD mode: array -> itemized rows grouped by bucket ---
+  let customCounter = 1;
+
   function renderBuild() {
     const wrap = $('buildGroups');
     wrap.innerHTML = '';
@@ -465,8 +473,21 @@
       group.className = 'build-group';
       group.innerHTML =
         '<div class="cat-group-label">' + BUCKET_LABEL[bucket] + '</div>' +
-        '<div class="build-head"><span>Item</span><span>Amount</span><span>Every</span><span></span></div>';
+        '<div class="build-head"><span>Item</span><span>Amount</span><span>Every</span><span>Bucket</span><span></span></div>';
       state.items.filter(i => i.bucket === bucket).forEach(item => group.appendChild(buildRow(item)));
+      const add = document.createElement('button');
+      add.type = 'button';
+      add.className = 'add-item';
+      add.textContent = '+ Add to ' + BUCKET_LABEL[bucket].toLowerCase();
+      add.addEventListener('click', () => {
+        const it = { id: 'custom-' + Date.now().toString(36) + (customCounter++), label: '', amount: 0, frequency: 'monthly', bucket: bucket, isCustom: true };
+        state.items.push(it);
+        renderBuild();
+        recompute();
+        const el = wrap.querySelector('.build-item[data-id="' + it.id + '"] .b-label');
+        if (el) el.focus();
+      });
+      group.appendChild(add);
       wrap.appendChild(group);
     });
   }
@@ -474,17 +495,21 @@
   function buildRow(item) {
     const wrap = document.createElement('div');
     wrap.className = 'build-item';
+    wrap.dataset.id = item.id;
     const row = document.createElement('div');
     row.className = 'build-row';
     row.innerHTML =
       '<input class="b-label" type="text" placeholder="Item name" value="' + escAttr(item.label) + '">' +
       '<input class="b-amount" type="number" min="0" step="25" placeholder="0" value="' + item.amount + '">' +
       '<select class="b-freq"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="annual">Annual</option></select>' +
+      '<select class="b-bucket"><option value="needs">Needs</option><option value="wants">Wants</option><option value="savings">Savings &amp; debt</option></select>' +
       '<button class="b-remove" type="button" title="Remove">&times;</button>';
     row.querySelector('.b-freq').value = item.frequency;
+    row.querySelector('.b-bucket').value = item.bucket;
     row.querySelector('.b-label').addEventListener('input', e => { item.label = e.target.value; recompute(); });
     row.querySelector('.b-amount').addEventListener('input', e => { item.amount = Math.max(0, parseFloat(e.target.value) || 0); recompute(); });
     row.querySelector('.b-freq').addEventListener('change', e => { item.frequency = e.target.value; recompute(); });
+    row.querySelector('.b-bucket').addEventListener('change', e => { item.bucket = e.target.value; renderBuild(); recompute(); });
     row.querySelector('.b-remove').addEventListener('click', () => { state.items = state.items.filter(x => x !== item); renderBuild(); recompute(); });
     wrap.appendChild(row);
     if (item.hint) {
