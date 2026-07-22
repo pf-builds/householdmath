@@ -191,6 +191,11 @@
   .ledger { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 12px; }
   .ledger-head { padding: 20px 28px 4px; }
   .ledger-head .eyebrow { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+  .ledger-def { font-size: 0.84rem; color: var(--ink-soft); margin-top: 8px; line-height: 1.5; }
+  .ledger-def a { color: var(--forest); font-weight: 600; text-decoration: none; white-space: nowrap; }
+  .ledger-def a:hover { text-decoration: underline; }
+  .bench-info { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border: 1px solid var(--ink-soft); border-radius: 50%; font-size: 0.66rem; font-weight: 700; color: var(--ink-soft); text-decoration: none; margin-left: 6px; font-family: 'Inter', sans-serif; vertical-align: middle; }
+  .bench-info:hover { border-color: var(--forest); color: var(--forest); background: var(--forest-bg); }
 
   .bucket { padding: 16px 28px 20px; border-top: 1px solid var(--border); }
   .bucket:nth-child(even) { background: var(--forest-bg); }
@@ -294,7 +299,7 @@
 
   <header>
     <h1>Where does your income actually go?</h1>
-    <p class="sub">Check your budget fast with three numbers, or build it up category by category, then see it grouped into needs, wants, and savings against the 50/30/20 rule of thumb. The calculator flags any bucket running hot and shows whether you finish the month ahead or behind.</p>
+    <p class="sub">Check your budget fast with three numbers, or build it category by category. Either way, see how it measures up against the 50/30/20 rule.</p>
   </header>
 
   <div class="card">
@@ -350,7 +355,10 @@
   </div>
 
   <div class="ledger">
-    <div class="ledger-head"><div class="eyebrow">Your budget vs. 50 / 30 / 20</div></div>
+    <div class="ledger-head">
+      <div class="eyebrow">Your budget vs. 50 / 30 / 20</div>
+      <div class="ledger-def">A rule of thumb: aim for about 50% of take-home on needs, 30% on wants, 20% on savings &amp; debt. <a href="#how-calculated">How this works &amp; where it comes from →</a></div>
+    </div>
     <div id="ledgerBuckets"></div>
     <div class="summary">
       <div class="line"><span>Total take-home</span><span id="sumIncome">—</span></div>
@@ -387,7 +395,7 @@
   <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="9334818123" data-ad-format="auto" data-full-width-responsive="true"></ins>
   <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 
-  <section class="explain">
+  <section class="explain" id="how-calculated">
     <h2>How this is calculated</h2>
     <p>Your entries are grouped into three buckets and each is measured as a share of your take-home income, then compared to the 50/30/20 guideline.</p>
     <table class="src-table">
@@ -610,7 +618,7 @@
         lines +
         '<div class="line sub"><span>' + BUCKET_LABEL[bucket] + ' subtotal</span><span>' + fmt(subtotal) + '</span></div>' +
         '<div class="bar"><div class="bar-fill' + (hot ? ' hot' : '') + '" style="width:' + barW + '%;"></div><div class="bar-mark" style="left:' + (bench * 100) + '%;"></div></div>' +
-        '<div class="line bench"><span>Benchmark ' + pct(bench) + '</span><span>' + fmt(income * bench) + '</span></div>' +
+        '<div class="line bench"><span>Benchmark ' + pct(bench) + '<a class="bench-info" href="#how-calculated" title="The 50/30/20 rule: about ' + pct(BENCH.needs) + ' of take-home on needs, ' + pct(BENCH.wants) + ' on wants, ' + pct(BENCH.savings) + ' on savings & debt. Tap for detail.">?</a></span><span>' + fmt(income * bench) + '</span></div>' +
         '<div class="flag ' + (hot ? 'hot' : 'ok') + '">' + flagTxt + '</div>';
       wrap.appendChild(block);
     });
