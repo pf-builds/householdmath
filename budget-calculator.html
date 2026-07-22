@@ -42,10 +42,10 @@
     },
     {
       "@type": "Question",
-      "name": "What does this budget calculator not account for?",
+      "name": "How do I handle annual or irregular costs in this budget?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "It works from the monthly figures you enter and treats them as typical. It does not model irregular or annual expenses (insurance premiums, holidays, car registration), income that varies month to month, or one-time windfalls. For an accurate picture, average irregular costs into a monthly figure before entering them. This is a planning estimate, not financial advice."
+        "text": "In Build mode, set any line item's frequency to quarterly or annual and the calculator converts it to a monthly figure automatically, so a $1,200 yearly insurance bill counts as $100 a month. In Check mode, use the separate Annual and irregular costs field, which is divided by twelve and added to needs. The calculator does not model income that varies month to month or one-time windfalls. This is a planning estimate, not financial advice."
       }
     }
   ]
@@ -164,6 +164,7 @@
   .build-item { margin-bottom: 12px; }
   .build-row { margin-bottom: 4px; }
   .build-hint { font-size: 0.76rem; color: var(--ink-soft); padding-left: 2px; }
+  .build-monthly { font-size: 0.76rem; color: var(--gold); font-weight: 600; padding-left: 2px; font-family: 'IBM Plex Mono', monospace; margin-bottom: 2px; }
   .build-row input, .build-row select {
     width: 100%; padding: 10px 10px; font-size: 0.95rem; font-family: 'IBM Plex Mono', monospace;
     border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--ink);
@@ -363,9 +364,11 @@
     <h3>A note on where debt payments go</h3>
     <p>This tool counts debt payments in the 20% savings-and-debt bucket, the most common modern reading of the rule. Some versions instead treat minimum payments as a need and count only extra payoff toward the 20%. The grouping changes the labels, not the underlying question: whether your essential costs leave enough room to save and pay down what you owe.</p>
 
+    <h3>Handling annual and irregular costs</h3>
+    <p>In Build mode, set any line's frequency to quarterly or annual and the calculator converts it to a monthly figure for you, so a $1,200 yearly insurance bill counts as $100 a month. In Check mode, the three bucket fields are monthly, and the separate "Annual &amp; irregular costs" field covers yearly bills the same way. Either way you no longer have to do that division by hand.</p>
+
     <h3>What this doesn't account for</h3>
     <ul>
-      <li>Irregular or annual costs (insurance renewals, holidays, registration) unless you average them into a monthly figure.</li>
       <li>Income that varies month to month, or one-time windfalls.</li>
       <li>The interest cost or payoff order of your specific debts, that's what the <a href="debt-payoff-calculator.html">debt payoff calculator</a> is for.</li>
     </ul>
@@ -377,8 +380,8 @@
     <p>Aim for roughly 50% of take-home pay on needs, 30% on wants, and 20% on savings and extra debt repayment. It's a rule of thumb popularized in the 2005 book <em>All Your Worth</em>, useful as a starting point rather than a fixed target.</p>
     <h3>Which category do my debt payments go in?</h3>
     <p>Here they sit with savings in the 20% bucket. Some versions count minimum payments as a need instead. The total picture matters more than the exact bucket.</p>
-    <h3>What does this budget calculator not account for?</h3>
-    <p>It treats the monthly figures you enter as typical. Average in irregular and annual costs yourself for an accurate read. It's a planning estimate, not financial advice.</p>
+    <h3>How do I handle annual or irregular costs?</h3>
+    <p>In Build mode, set a line's frequency to quarterly or annual and it's converted to a monthly figure automatically. In Check mode, use the "Annual &amp; irregular costs" field. It's a planning estimate, not financial advice.</p>
   </section>
 
   <footer>
@@ -506,12 +509,27 @@
       '<button class="b-remove" type="button" title="Remove">&times;</button>';
     row.querySelector('.b-freq').value = item.frequency;
     row.querySelector('.b-bucket').value = item.bucket;
+
+    const monthlyNote = document.createElement('div');
+    monthlyNote.className = 'build-monthly';
+    const updNote = () => {
+      if (item.frequency !== 'monthly') {
+        monthlyNote.textContent = fmt(item.amount) + ' ' + item.frequency + ' = ' + fmt(monthlyOf(item)) + '/mo';
+        monthlyNote.style.display = 'block';
+      } else {
+        monthlyNote.style.display = 'none';
+      }
+    };
+
     row.querySelector('.b-label').addEventListener('input', e => { item.label = e.target.value; recompute(); });
-    row.querySelector('.b-amount').addEventListener('input', e => { item.amount = Math.max(0, parseFloat(e.target.value) || 0); recompute(); });
-    row.querySelector('.b-freq').addEventListener('change', e => { item.frequency = e.target.value; recompute(); });
+    row.querySelector('.b-amount').addEventListener('input', e => { item.amount = Math.max(0, parseFloat(e.target.value) || 0); updNote(); recompute(); });
+    row.querySelector('.b-freq').addEventListener('change', e => { item.frequency = e.target.value; updNote(); recompute(); });
     row.querySelector('.b-bucket').addEventListener('change', e => { item.bucket = e.target.value; renderBuild(); recompute(); });
     row.querySelector('.b-remove').addEventListener('click', () => { state.items = state.items.filter(x => x !== item); renderBuild(); recompute(); });
+
     wrap.appendChild(row);
+    updNote();
+    wrap.appendChild(monthlyNote);
     if (item.hint) {
       const h = document.createElement('div');
       h.className = 'build-hint';
