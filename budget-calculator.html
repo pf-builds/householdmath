@@ -161,7 +161,9 @@
   .build-head, .build-row { display: grid; grid-template-columns: 1.7fr 1fr 1.1fr 34px; gap: 10px; align-items: center; }
   .build-head { margin-bottom: 8px; }
   .build-head span { font-size: 0.72rem; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
-  .build-row { margin-bottom: 10px; }
+  .build-item { margin-bottom: 12px; }
+  .build-row { margin-bottom: 4px; }
+  .build-hint { font-size: 0.76rem; color: var(--ink-soft); padding-left: 2px; }
   .build-row input, .build-row select {
     width: 100%; padding: 10px 10px; font-size: 0.95rem; font-family: 'IBM Plex Mono', monospace;
     border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--ink);
@@ -404,12 +406,15 @@
 
   function defaultItems() {
     return [
-      { id: 'housing', label: 'Housing', amount: 1600, frequency: 'monthly', bucket: 'needs', isCustom: false },
-      { id: 'transportation', label: 'Transportation', amount: 500, frequency: 'monthly', bucket: 'needs', isCustom: false },
-      { id: 'food', label: 'Food & groceries', amount: 700, frequency: 'monthly', bucket: 'needs', isCustom: false },
-      { id: 'discretionary', label: 'Discretionary', amount: 1000, frequency: 'monthly', bucket: 'wants', isCustom: false },
-      { id: 'savings', label: 'Savings & investing', amount: 600, frequency: 'monthly', bucket: 'savings', isCustom: false },
-      { id: 'debt', label: 'Debt payments', amount: 400, frequency: 'monthly', bucket: 'savings', isCustom: false }
+      { id: 'housing', label: 'Housing', amount: 1350, frequency: 'monthly', bucket: 'needs', isCustom: false, hint: 'Rent or mortgage payment only, not utilities or insurance.' },
+      { id: 'utilities', label: 'Utilities', amount: 300, frequency: 'monthly', bucket: 'needs', isCustom: false, hint: 'Electric, gas, water, trash, phone, internet.' },
+      { id: 'insurance', label: 'Insurance', amount: 200, frequency: 'monthly', bucket: 'needs', isCustom: false, hint: 'Health, auto, renters, or homeowners premiums.' },
+      { id: 'transportation', label: 'Transportation', amount: 450, frequency: 'monthly', bucket: 'needs', isCustom: false, hint: 'Car payment, gas, transit, upkeep.' },
+      { id: 'food', label: 'Food & groceries', amount: 600, frequency: 'monthly', bucket: 'needs', isCustom: false, hint: 'Groceries and household basics. Restaurants go under discretionary.' },
+      { id: 'discretionary', label: 'Discretionary', amount: 850, frequency: 'monthly', bucket: 'wants', isCustom: false, hint: 'Dining out, entertainment, hobbies, travel.' },
+      { id: 'subscriptions', label: 'Subscriptions', amount: 150, frequency: 'monthly', bucket: 'wants', isCustom: false, hint: 'Streaming, apps, memberships. Phone and internet are arguably needs, move that spending to Utilities if you prefer.' },
+      { id: 'savings', label: 'Savings & investing', amount: 600, frequency: 'monthly', bucket: 'savings', isCustom: false, hint: 'Emergency fund, retirement, other savings.' },
+      { id: 'debt', label: 'Debt payments', amount: 400, frequency: 'monthly', bucket: 'savings', isCustom: false, hint: 'Credit cards, student and personal loans.' }
     ];
   }
 
@@ -467,11 +472,13 @@
   }
 
   function buildRow(item) {
+    const wrap = document.createElement('div');
+    wrap.className = 'build-item';
     const row = document.createElement('div');
     row.className = 'build-row';
     row.innerHTML =
-      '<input class="b-label" type="text" value="' + escAttr(item.label) + '">' +
-      '<input class="b-amount" type="number" min="0" step="25" value="' + item.amount + '">' +
+      '<input class="b-label" type="text" placeholder="Item name" value="' + escAttr(item.label) + '">' +
+      '<input class="b-amount" type="number" min="0" step="25" placeholder="0" value="' + item.amount + '">' +
       '<select class="b-freq"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="annual">Annual</option></select>' +
       '<button class="b-remove" type="button" title="Remove">&times;</button>';
     row.querySelector('.b-freq').value = item.frequency;
@@ -479,7 +486,14 @@
     row.querySelector('.b-amount').addEventListener('input', e => { item.amount = Math.max(0, parseFloat(e.target.value) || 0); recompute(); });
     row.querySelector('.b-freq').addEventListener('change', e => { item.frequency = e.target.value; recompute(); });
     row.querySelector('.b-remove').addEventListener('click', () => { state.items = state.items.filter(x => x !== item); renderBuild(); recompute(); });
-    return row;
+    wrap.appendChild(row);
+    if (item.hint) {
+      const h = document.createElement('div');
+      h.className = 'build-hint';
+      h.textContent = item.hint;
+      wrap.appendChild(h);
+    }
+    return wrap;
   }
 
   // --- Results ledger (reads the array; identical in both modes) ---
