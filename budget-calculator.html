@@ -231,6 +231,29 @@
   .handoff .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); flex-shrink: 0; }
   .handoff a { font-weight: 600; }
 
+  .export { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 22px 26px; margin-bottom: 24px; }
+  .export-head { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 600; margin-bottom: 14px; }
+  .export-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+  .exp-btn { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; font-weight: 600; background: var(--forest); color: #fff; border: none; border-radius: 8px; padding: 10px 16px; cursor: pointer; }
+  .exp-btn:hover { background: #14231C; }
+  .exp-btn.ghost { background: var(--forest-bg); color: var(--forest); border: 1px solid #9DBBA6; }
+  .exp-btn.ghost:hover { background: #DCE8DD; }
+  .export-note { font-size: 0.8rem; color: var(--ink-soft); margin-top: 12px; }
+  .export-msg { font-size: 0.85rem; font-weight: 600; color: var(--good); margin-top: 10px; min-height: 1.2em; }
+  .export-msg.error { color: var(--warn); }
+
+  .print-only { display: none; }
+  @media print {
+    .site-nav, header, .card, .handoff, .ad-label, .adsbygoogle, .export, section.explain, footer { display: none !important; }
+    .print-only { display: block !important; }
+    .print-head { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 600; margin: 0 0 18px; }
+    .print-disc { font-size: 0.8rem; color: #444; margin-top: 16px; }
+    body { background: #fff; color: #000; }
+    .wrap { padding-top: 20px; max-width: 100%; }
+    .ledger { border: 1px solid #ccc; }
+    .bucket:nth-child(even) { background: #f4f4f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+
   section.explain { margin-top: 48px; }
   section.explain h2 { font-family: 'Fraunces', serif; font-size: 1.4rem; margin: 0 0 14px; }
   section.explain h3 { font-size: 1.05rem; margin: 24px 0 8px; }
@@ -252,6 +275,8 @@
 </head>
 <body>
 <div class="wrap">
+
+<div class="print-only print-head" id="printHead">HouseholdMath — Budget summary</div>
 
 <nav class="site-nav">
   <a href="index.html" class="brand-link">HouseholdMath</a>
@@ -334,6 +359,21 @@
       <div class="verdict" id="verdict"></div>
     </div>
   </div>
+
+  <div class="export" id="export">
+    <div class="export-head">Save or share your budget</div>
+    <div class="export-btns">
+      <button type="button" id="btnPrint" class="exp-btn">Print / save as PDF</button>
+      <button type="button" id="btnCsv" class="exp-btn">Download my budget</button>
+      <button type="button" id="btnCopy" class="exp-btn">Copy to clipboard</button>
+      <button type="button" id="btnLoad" class="exp-btn ghost">Load a saved budget</button>
+      <input type="file" id="fileLoad" accept=".csv,text/csv" style="display:none;">
+    </div>
+    <div class="export-note">These numbers never leave your browser. Download and copy run entirely on your device, and nothing is uploaded anywhere. A downloaded budget is your save-and-resume file, session data is cleared when you close the tab.</div>
+    <div class="export-msg" id="exportMsg" role="status" aria-live="polite"></div>
+  </div>
+
+  <div class="print-only print-disc">Planning estimate only, not professional financial, tax, or legal advice. Benchmark: the 50/30/20 rule (needs / wants / savings &amp; debt).</div>
 
   <div class="handoff" id="handoff">
     <span class="dot"></span>
@@ -610,10 +650,10 @@
   }
 
   // --- Handoff to emergency fund / debt payoff (mode-agnostic, normalized) ---
+  const isDebt = i => i.bucket === 'savings' && (i.id === 'debt' || /debt/i.test(i.label));
   function saveHandoff() {
-    const debtItem = state.items.find(i => i.id === 'debt');
-    const debtM = debtItem ? monthlyOf(debtItem) : 0;
-    const savingsM = state.items.filter(i => i.bucket === 'savings' && i.id !== 'debt').reduce((s, i) => s + monthlyOf(i), 0);
+    const debtM = state.items.filter(isDebt).reduce((s, i) => s + monthlyOf(i), 0);
+    const savingsM = state.items.filter(i => i.bucket === 'savings' && !isDebt(i)).reduce((s, i) => s + monthlyOf(i), 0);
     const allocated = state.items.reduce((s, i) => s + monthlyOf(i), 0);
     const leftover = state.income - allocated;
     hmSave({
@@ -642,6 +682,146 @@
     }
   }
 
+  // --- Export / import (all client-side; nothing leaves the browser) ---
+  function showMsg(text, isError) {
+    const m = $('exportMsg');
+    m.textContent = text;
+    m.className = 'export-msg' + (isError ? ' error' : '');
+  }
+
+  function budgetText() {
+    const lines = [];
+    lines.push('HouseholdMath — Budget summary');
+    lines.push('Monthly take-home: ' + fmt(state.income));
+    lines.push('');
+    let allocated = 0;
+    BUCKETS.forEach(b => {
+      const items = state.items.filter(i => i.bucket === b);
+      const sub = items.reduce((s, i) => s + monthlyOf(i), 0);
+      allocated += sub;
+      const share = state.income > 0 ? Math.round(sub / state.income * 100) : 0;
+      lines.push(BUCKET_LABEL[b].toUpperCase() + ' — ' + fmt(sub) + '/mo (' + share + '% of income, benchmark ' + Math.round(BENCH[b] * 100) + '%)');
+      items.forEach(i => {
+        const fn = i.frequency !== 'monthly' ? ' [' + fmt(i.amount) + ' ' + i.frequency + ']' : '';
+        lines.push('  ' + (i.label || 'Item') + ': ' + fmt(monthlyOf(i)) + '/mo' + fn);
+      });
+      lines.push('');
+    });
+    const leftover = state.income - allocated;
+    lines.push('Total allocated: ' + fmt(allocated));
+    lines.push((leftover < 0 ? 'Shortfall: ' : 'Unallocated: ') + fmt(Math.abs(leftover)));
+    lines.push('');
+    lines.push('Benchmark: the 50/30/20 rule. Planning estimate, not financial advice.');
+    return lines.join('\n');
+  }
+
+  function csvCell(s) { s = String(s); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+
+  function budgetCsv() {
+    const rows = [['Label', 'Amount', 'Frequency', 'Monthly', 'Bucket']];
+    rows.push(['Take-home income', state.income, 'monthly', state.income, 'income']);
+    state.items.forEach(i => rows.push([i.label || 'Item', i.amount, i.frequency, Math.round(monthlyOf(i)), i.bucket]));
+    return rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+  }
+
+  function parseCsvLine(line) {
+    const out = []; let cur = ''; let inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (inQ) {
+        if (c === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else inQ = false; }
+        else cur += c;
+      } else {
+        if (c === '"') inQ = true;
+        else if (c === ',') { out.push(cur); cur = ''; }
+        else cur += c;
+      }
+    }
+    out.push(cur);
+    return out;
+  }
+
+  function normalizeFreq(s) {
+    s = String(s).trim().toLowerCase();
+    if (FREQ[s]) return s;
+    if (/year|annual|yr|^y$/.test(s)) return 'annual';
+    if (/quarter|qtr|^q$/.test(s)) return 'quarterly';
+    return 'monthly';
+  }
+
+  function loadCsvText(text) {
+    const lines = text.split(/\r?\n/).filter(l => l.trim().length);
+    if (!lines.length) throw 'That file is empty.';
+    const header = parseCsvLine(lines[0]).map(h => h.trim().toLowerCase());
+    const li = header.indexOf('label'), ai = header.indexOf('amount'), fi = header.indexOf('frequency'), bi = header.indexOf('bucket');
+    if (li < 0 || ai < 0 || bi < 0) throw 'That doesn\'t look like a budget saved here. It needs Label, Amount, and Bucket columns.';
+    const newItems = []; let newIncome = null; let n = 0;
+    for (let r = 1; r < lines.length; r++) {
+      const cells = parseCsvLine(lines[r]);
+      const label = (cells[li] || '').trim();
+      const amount = Math.max(0, parseFloat(String(cells[ai] || '').replace(/[$,]/g, '')) || 0);
+      const freq = normalizeFreq(fi >= 0 ? cells[fi] : '');
+      let bucket = String(cells[bi] || '').trim().toLowerCase();
+      if (bucket === 'income') { newIncome = amount; continue; }
+      if (BUCKETS.indexOf(bucket) < 0) bucket = 'needs';
+      if (!label && amount === 0) continue;
+      newItems.push({ id: 'imp-' + (n++), label: label || 'Item', amount: amount, frequency: freq, bucket: bucket, isCustom: true });
+    }
+    if (!newItems.length && newIncome === null) throw 'No budget rows found in that file.';
+    if (newItems.length) state.items = newItems;
+    if (newIncome !== null) { state.income = newIncome; $('income').value = newIncome; }
+    setMode(state.mode);
+    return newItems.length;
+  }
+
+  function wireExport() {
+    $('btnPrint').addEventListener('click', () => window.print());
+
+    $('btnCsv').addEventListener('click', () => {
+      const blob = new Blob([budgetCsv()], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'my-budget.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showMsg('Saved as my-budget.csv on your device.');
+    });
+
+    $('btnCopy').addEventListener('click', async () => {
+      const txt = budgetText();
+      try {
+        await navigator.clipboard.writeText(txt);
+        showMsg('Copied to your clipboard.');
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        let ok = false;
+        try { ok = document.execCommand('copy'); } catch (e2) {}
+        ta.remove();
+        showMsg(ok ? 'Copied to your clipboard.' : 'Could not copy automatically. Try the download instead.', !ok);
+      }
+    });
+
+    $('btnLoad').addEventListener('click', () => $('fileLoad').click());
+    $('fileLoad').addEventListener('change', e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const count = loadCsvText(String(reader.result));
+          showMsg('Loaded ' + count + ' item' + (count === 1 ? '' : 's') + ' from ' + f.name + '.');
+        } catch (err) {
+          showMsg(typeof err === 'string' ? err : 'Could not read that file.', true);
+        }
+      };
+      reader.onerror = () => showMsg('Could not read that file.', true);
+      reader.readAsText(f);
+      e.target.value = '';
+    });
+  }
+
   // --- Init ---
   const startMode = new URLSearchParams(location.search).get('mode');
   if (startMode === 'build' || startMode === 'check') state.mode = startMode;
@@ -657,6 +837,8 @@
   $('checkSavings').addEventListener('input', e => { setCheckBucket('savings', num(e)); recompute(); });
   $('checkIrregular').addEventListener('input', e => { setIrregular(num(e)); recompute(); });
 
+  try { $('printHead').textContent = 'HouseholdMath — Budget summary · ' + new Date().toLocaleDateString(); } catch (e) {}
+  wireExport();
   offerPrefill();
   setMode(state.mode);
 </script>
