@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Household Budget Calculator — Your Spending vs. the 50/30/20 Rule</title>
+<meta name="description" content="Itemize your monthly spending by category and see how it compares to the 50/30/20 budgeting rule. Flags the buckets running hot and shows your surplus or shortfall.">
+<link rel="canonical" href="https://pf-builds.github.io/householdmath/budget-calculator.html">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to check your budget against the 50/30/20 rule",
+  "step": [
+    { "@type": "HowToStep", "name": "Enter your take-home income", "text": "Enter your monthly take-home pay, the amount that actually lands in your account after taxes and deductions." },
+    { "@type": "HowToStep", "name": "Fill in each spending category", "text": "Enter your typical monthly spending on housing, transportation, food, debt payments, savings, and discretionary items." },
+    { "@type": "HowToStep", "name": "Read your three buckets", "text": "See your spending grouped into needs, wants, and savings, each shown as a share of income against its 50/30/20 benchmark." },
+    { "@type": "HowToStep", "name": "Act on the flags", "text": "Any bucket running over its benchmark is flagged, and the summary shows whether you have a monthly surplus or shortfall." }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is the 50/30/20 budgeting rule?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The 50/30/20 rule is a rule-of-thumb budget framework: aim to spend about 50% of your take-home pay on needs, 30% on wants, and 20% on savings and extra debt repayment. It was popularized in the 2005 book All Your Worth by Elizabeth Warren and Amelia Warren Tyagi. It is a starting guideline, not a legal or one-size-fits-all standard, high-cost-of-living areas often push needs well above 50%."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which category do my debt payments go in?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "This calculator groups debt payments with savings in the 20% bucket, which is the most common modern framing of the rule. Some versions instead count minimum debt payments as a need and only extra payoff as savings. Either way, the total picture matters more than the exact bucket, if your combined needs plus required debt payments crowd out savings, that is the signal to act on."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does this budget calculator not account for?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It works from the monthly figures you enter and treats them as typical. It does not model irregular or annual expenses (insurance premiums, holidays, car registration), income that varies month to month, or one-time windfalls. For an accurate picture, average irregular costs into a monthly figure before entering them. This is a planning estimate, not financial advice."
+      }
+    }
+  ]
+}
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #F7F3EC;
+    --panel: #FFFFFF;
+    --ink: #1B2B23;
+    --ink-soft: #5E6E63;
+    --border: #E4DDCF;
+    --forest: #1B3A2F;
+    --forest-bg: #E8EEE8;
+    --gold: #B67F33;
+    --gold-bg: #F4EAD5;
+    --good: #1F6F4C;
+    --good-bg: #E4F1E8;
+    --warn: #A6551D;
+    --warn-bg: #FBEEE3;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--forest); }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .site-nav {
+    display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem;
+    padding: 22px 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 32px;
+  }
+  .site-nav .brand-link { color: var(--forest); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; text-decoration: none; }
+  .tools-dropdown { position: relative; }
+  .tools-dropdown summary { cursor: pointer; color: var(--ink-soft); list-style: none; }
+  .tools-dropdown summary::-webkit-details-marker { display: none; }
+  .tools-dropdown summary:hover { color: var(--forest); }
+  .tools-menu {
+    position: absolute; top: 100%; left: 0; margin-top: 8px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px; display: flex; flex-direction: column; min-width: 250px;
+    box-shadow: 0 8px 24px rgba(27,58,47,0.14); z-index: 10;
+  }
+  .tools-menu a { padding: 8px 10px; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 0.82rem; }
+  .tools-menu a:hover { background: var(--forest-bg); color: var(--forest); }
+
+  header { margin-bottom: 28px; }
+  h1 {
+    font-family: 'Fraunces', serif; font-weight: 600;
+    font-size: clamp(1.9rem, 4vw, 2.5rem); line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.01em;
+  }
+  .sub { color: var(--ink-soft); font-size: 1.04rem; max-width: 60ch; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-bottom: 24px; }
+  .card h2 { font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 600; margin: 0 0 6px; }
+  .card .card-note { color: var(--ink-soft); font-size: 0.88rem; margin: 0 0 20px; }
+
+  .prefill {
+    display: none; align-items: flex-start; gap: 12px;
+    background: var(--gold-bg); border: 1px solid #E6D2AC; border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 20px; font-size: 0.9rem;
+  }
+  .prefill.show { display: flex; }
+  .prefill button {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; font-weight: 600;
+    background: var(--forest); color: #fff; border: none; border-radius: 7px;
+    padding: 8px 14px; cursor: pointer; white-space: nowrap;
+  }
+  .prefill button:hover { background: #14231C; }
+  .prefill .dismiss { background: none; color: var(--ink-soft); padding: 8px 6px; }
+
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 0.88rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field .hint { font-size: 0.8rem; color: var(--ink-soft); font-weight: 400; margin-top: 4px; }
+
+  input[type="number"] {
+    width: 100%; padding: 11px 12px; font-size: 1rem; font-family: 'IBM Plex Mono', monospace;
+    border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--ink);
+  }
+  input[type="number"]:focus { outline: 2px solid var(--forest); outline-offset: 1px; border-color: var(--forest); }
+
+  .income-field input { border-color: var(--forest); background: var(--forest-bg); }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
+
+  .cat-group-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--gold); font-weight: 600; margin: 22px 0 12px;
+  }
+
+  .ledger { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 12px; }
+  .ledger-head { padding: 20px 28px 4px; }
+  .ledger-head .eyebrow { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+
+  .bucket { padding: 16px 28px 20px; border-top: 1px solid var(--border); }
+  .bucket:nth-child(even) { background: var(--forest-bg); }
+  .bucket-title { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .bucket-title strong { font-family: 'Fraunces', serif; font-size: 1.12rem; color: var(--forest); }
+  .bucket-title .share { font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; font-weight: 600; }
+
+  .line { display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; padding: 4px 0; color: var(--ink-soft); }
+  .line span:last-child { color: var(--ink); }
+  .line.sub { border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 8px; font-weight: 700; color: var(--ink); }
+  .line.sub span:last-child { color: var(--ink); }
+  .line.bench { font-size: 0.8rem; }
+
+  .bar { height: 8px; border-radius: 5px; background: var(--border); overflow: hidden; margin: 10px 0 4px; position: relative; }
+  .bar-fill { height: 100%; border-radius: 5px; background: var(--forest); transition: width 0.2s ease; }
+  .bar-fill.hot { background: var(--warn); }
+  .bar-mark { position: absolute; top: -3px; width: 2px; height: 14px; background: var(--ink); opacity: 0.55; }
+
+  .flag { font-size: 0.82rem; font-weight: 500; margin-top: 8px; }
+  .flag.hot { color: var(--warn); }
+  .flag.ok { color: var(--good); }
+
+  .summary { padding: 20px 28px 24px; border-top: 2px solid var(--border); }
+  .summary .line.total { font-weight: 700; color: var(--forest); font-size: 1.05rem; border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 10px; }
+  .summary .line.total span:last-child { font-family: 'Fraunces', serif; font-size: 1.25rem; color: var(--forest); }
+
+  .verdict { border-radius: 10px; padding: 14px 16px; font-size: 0.92rem; margin-top: 14px; font-weight: 500; }
+  .verdict.good { background: var(--good-bg); border: 1px solid #BFE0CC; color: var(--good); }
+  .verdict.warn { background: var(--warn-bg); border: 1px solid #E8CBB0; color: var(--warn); }
+  .verdict strong { font-family: 'IBM Plex Mono', monospace; }
+
+  .handoff {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: var(--forest-bg); border: 1px solid #CADBCB; border-radius: 12px;
+    padding: 14px 18px; margin-bottom: 24px; font-size: 0.88rem; color: var(--ink);
+  }
+  .handoff .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); flex-shrink: 0; }
+  .handoff a { font-weight: 600; }
+
+  section.explain { margin-top: 48px; }
+  section.explain h2 { font-family: 'Fraunces', serif; font-size: 1.4rem; margin: 0 0 14px; }
+  section.explain h3 { font-size: 1.05rem; margin: 24px 0 8px; }
+  section.explain p { color: var(--ink-soft); font-size: 0.98rem; }
+  section.explain ul { color: var(--ink-soft); font-size: 0.98rem; padding-left: 20px; }
+  .src-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.9rem; }
+  .src-table th, .src-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .src-table th { font-weight: 600; color: var(--ink-soft); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .faq h3 { font-size: 1.02rem; margin: 20px 0 6px; color: var(--ink); }
+  .faq p { color: var(--ink-soft); font-size: 0.95rem; margin: 0; }
+
+  .ad-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); margin: 8px 0 10px; }
+
+  footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 0.82rem; color: var(--ink-soft); }
+  footer a { color: var(--ink-soft); }
+</style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6054690102277779" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="site-nav">
+  <a href="index.html" class="brand-link">HouseholdMath</a>
+  <details class="tools-dropdown">
+    <summary>All calculators &#9662;</summary>
+    <div class="tools-menu">
+      <a href="budget-calculator.html">Household budget</a>
+      <a href="emergency-fund-calculator.html">Emergency fund</a>
+      <a href="debt-payoff-calculator.html">Debt payoff (avalanche vs snowball)</a>
+      <a href="savings-goal-calculator.html">Savings goal &amp; compound growth</a>
+      <a href="housing-affordability-calculator.html">Housing affordability</a>
+    </div>
+  </details>
+</nav>
+
+  <header>
+    <h1>Where does your income actually go?</h1>
+    <p class="sub">Itemize your monthly spending and see it grouped into needs, wants, and savings against the 50/30/20 rule of thumb. The calculator flags any bucket running hot and shows whether you finish the month ahead or behind.</p>
+  </header>
+
+  <div class="card">
+    <h2>Your monthly numbers</h2>
+    <p class="card-note">Use take-home pay (after taxes and deductions) and typical monthly amounts. Average irregular costs like insurance into a monthly figure.</p>
+
+    <div id="prefill" class="prefill">
+      <div style="flex:1;">Found saved figures from another calculator this session. Load them here?</div>
+      <button id="prefillApply" type="button">Load</button>
+      <button id="prefillDismiss" class="dismiss" type="button">No thanks</button>
+    </div>
+
+    <div class="field income-field">
+      <label for="income">Monthly take-home income</label>
+      <input type="number" id="income" value="5000" min="0" step="100">
+      <div class="hint">What actually lands in your account each month.</div>
+    </div>
+
+    <div class="cat-group-label">Needs</div>
+    <div class="row2">
+      <div class="field">
+        <label for="housing">Housing</label>
+        <input type="number" id="housing" value="1600" min="0" step="50">
+        <div class="hint">Rent or mortgage, utilities, insurance.</div>
+      </div>
+      <div class="field">
+        <label for="transportation">Transportation</label>
+        <input type="number" id="transportation" value="500" min="0" step="25">
+        <div class="hint">Car payment, gas, transit, upkeep.</div>
+      </div>
+    </div>
+    <div class="field">
+      <label for="food">Food (groceries &amp; essentials)</label>
+      <input type="number" id="food" value="700" min="0" step="25">
+      <div class="hint">Groceries and household basics. Put restaurants under discretionary.</div>
+    </div>
+
+    <div class="cat-group-label">Savings &amp; debt</div>
+    <div class="row2">
+      <div class="field">
+        <label for="savings">Savings &amp; investing</label>
+        <input type="number" id="savings" value="600" min="0" step="25">
+        <div class="hint">Emergency fund, retirement, other savings.</div>
+      </div>
+      <div class="field">
+        <label for="debt">Debt payments</label>
+        <input type="number" id="debt" value="400" min="0" step="25">
+        <div class="hint">Credit cards, student and personal loans.</div>
+      </div>
+    </div>
+
+    <div class="cat-group-label">Wants</div>
+    <div class="field">
+      <label for="discretionary">Discretionary</label>
+      <input type="number" id="discretionary" value="1000" min="0" step="25">
+      <div class="hint">Dining out, subscriptions, entertainment, hobbies, travel.</div>
+    </div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head"><div class="eyebrow">Your budget vs. 50 / 30 / 20</div></div>
+
+    <div class="bucket">
+      <div class="bucket-title"><strong>Needs</strong><span class="share" id="needsShare">—</span></div>
+      <div class="line"><span>Housing</span><span id="outHousing">—</span></div>
+      <div class="line"><span>Transportation</span><span id="outTransport">—</span></div>
+      <div class="line"><span>Food</span><span id="outFood">—</span></div>
+      <div class="line sub"><span>Needs subtotal</span><span id="needsTotal">—</span></div>
+      <div class="bar"><div class="bar-fill" id="needsBar"></div><div class="bar-mark" style="left:50%;"></div></div>
+      <div class="line bench"><span>Benchmark 50%</span><span id="needsBench">—</span></div>
+      <div class="flag" id="needsFlag"></div>
+    </div>
+
+    <div class="bucket">
+      <div class="bucket-title"><strong>Wants</strong><span class="share" id="wantsShare">—</span></div>
+      <div class="line"><span>Discretionary</span><span id="outDisc">—</span></div>
+      <div class="line sub"><span>Wants subtotal</span><span id="wantsTotal">—</span></div>
+      <div class="bar"><div class="bar-fill" id="wantsBar"></div><div class="bar-mark" style="left:30%;"></div></div>
+      <div class="line bench"><span>Benchmark 30%</span><span id="wantsBench">—</span></div>
+      <div class="flag" id="wantsFlag"></div>
+    </div>
+
+    <div class="bucket">
+      <div class="bucket-title"><strong>Savings &amp; debt</strong><span class="share" id="saveShare">—</span></div>
+      <div class="line"><span>Savings &amp; investing</span><span id="outSavings">—</span></div>
+      <div class="line"><span>Debt payments</span><span id="outDebt">—</span></div>
+      <div class="line sub"><span>Savings &amp; debt subtotal</span><span id="saveTotal">—</span></div>
+      <div class="bar"><div class="bar-fill" id="saveBar"></div><div class="bar-mark" style="left:20%;"></div></div>
+      <div class="line bench"><span>Benchmark 20%</span><span id="saveBench">—</span></div>
+      <div class="flag" id="saveFlag"></div>
+    </div>
+
+    <div class="summary">
+      <div class="line"><span>Total take-home</span><span id="sumIncome">—</span></div>
+      <div class="line"><span>Total allocated</span><span id="sumAllocated">—</span></div>
+      <div class="line total"><span id="leftoverLabel">Unallocated / surplus</span><span id="sumLeftover">—</span></div>
+      <div class="verdict" id="verdict"></div>
+    </div>
+  </div>
+
+  <div class="handoff" id="handoff">
+    <span class="dot"></span>
+    <span id="handoffText">These figures are saved for this browser session.</span>
+    <a href="emergency-fund-calculator.html">Emergency fund →</a>
+    <a href="debt-payoff-calculator.html">Debt payoff →</a>
+  </div>
+
+  <!-- Below Results Ad -->
+  <div class="ad-label">Advertisement</div>
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="9334818123" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+  <section class="explain">
+    <h2>How this is calculated</h2>
+    <p>Your entries are grouped into three buckets and each is measured as a share of your take-home income, then compared to the 50/30/20 guideline.</p>
+    <table class="src-table">
+      <tr><th>Bucket</th><th>What's in it</th><th>Benchmark</th></tr>
+      <tr><td>Needs</td><td>Housing, transportation, food</td><td>≈ 50% of take-home</td></tr>
+      <tr><td>Wants</td><td>Discretionary spending</td><td>≈ 30% of take-home</td></tr>
+      <tr><td>Savings &amp; debt</td><td>Savings, investing, debt payments</td><td>≈ 20% of take-home</td></tr>
+    </table>
+    <p>A bucket is flagged as running hot when it exceeds its benchmark share. The summary compares everything you allocated against your take-home pay: a positive figure is money not yet assigned, a negative figure means your planned spending is larger than your income.</p>
+
+    <h3>Where the 50/30/20 rule comes from</h3>
+    <p>The 50/30/20 framework was popularized in the 2005 book <em>All Your Worth: The Ultimate Lifetime Money Plan</em> by Elizabeth Warren and Amelia Warren Tyagi. The U.S. Consumer Financial Protection Bureau (CFPB) publishes budgeting worksheets built on the same needs/wants/savings structure. It is a widely used starting point, not a rule with legal force, and it fits some situations poorly, high housing-cost areas routinely push needs above 50%, which is why the benchmark is shown as a guide rather than a pass/fail line.</p>
+
+    <h3>A note on where debt payments go</h3>
+    <p>This tool counts debt payments in the 20% savings-and-debt bucket, the most common modern reading of the rule. Some versions instead treat minimum payments as a need and count only extra payoff toward the 20%. The grouping changes the labels, not the underlying question: whether your essential costs leave enough room to save and pay down what you owe.</p>
+
+    <h3>What this doesn't account for</h3>
+    <ul>
+      <li>Irregular or annual costs (insurance renewals, holidays, registration) unless you average them into a monthly figure.</li>
+      <li>Income that varies month to month, or one-time windfalls.</li>
+      <li>The interest cost or payoff order of your specific debts, that's what the <a href="debt-payoff-calculator.html">debt payoff calculator</a> is for.</li>
+    </ul>
+  </section>
+
+  <section class="explain faq">
+    <h2>Common questions</h2>
+    <h3>What is the 50/30/20 budgeting rule?</h3>
+    <p>Aim for roughly 50% of take-home pay on needs, 30% on wants, and 20% on savings and extra debt repayment. It's a rule of thumb popularized in the 2005 book <em>All Your Worth</em>, useful as a starting point rather than a fixed target.</p>
+    <h3>Which category do my debt payments go in?</h3>
+    <p>Here they sit with savings in the 20% bucket. Some versions count minimum payments as a need instead. The total picture matters more than the exact bucket.</p>
+    <h3>What does this budget calculator not account for?</h3>
+    <p>It treats the monthly figures you enter as typical. Average in irregular and annual costs yourself for an accurate read. It's a planning estimate, not financial advice.</p>
+  </section>
+
+  <footer>
+    <p>HouseholdMath provides general estimates for planning purposes only. It is not professional financial, tax, or legal advice. Consult a qualified advisor before making individual financial decisions.</p>
+    <p><a href="index.html">All calculators</a> &middot; <a href="privacy.html">Privacy policy</a></p>
+  </footer>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+  const pct = n => (n * 100).toFixed(0) + '%';
+
+  // --- Shared cross-calculator session store (never persisted beyond the tab) ---
+  const HM_KEY = 'householdmath_v1';
+  function hmLoad() { try { return JSON.parse(sessionStorage.getItem(HM_KEY)) || {}; } catch (e) { return {}; } }
+  function hmSave(patch) {
+    const d = hmLoad();
+    Object.assign(d, patch);
+    try { sessionStorage.setItem(HM_KEY, JSON.stringify(d)); } catch (e) {}
+  }
+
+  const inputs = ['income','housing','transportation','food','savings','debt','discretionary'];
+
+  function calc() {
+    const income = Math.max(0, parseFloat($('income').value) || 0);
+    const housing = Math.max(0, parseFloat($('housing').value) || 0);
+    const transportation = Math.max(0, parseFloat($('transportation').value) || 0);
+    const food = Math.max(0, parseFloat($('food').value) || 0);
+    const savings = Math.max(0, parseFloat($('savings').value) || 0);
+    const debt = Math.max(0, parseFloat($('debt').value) || 0);
+    const discretionary = Math.max(0, parseFloat($('discretionary').value) || 0);
+
+    const needs = housing + transportation + food;
+    const wants = discretionary;
+    const save = savings + debt;
+    const allocated = needs + wants + save;
+    const leftover = income - allocated;
+    const share = v => income > 0 ? v / income : 0;
+
+    $('outHousing').textContent = fmt(housing);
+    $('outTransport').textContent = fmt(transportation);
+    $('outFood').textContent = fmt(food);
+    $('outDisc').textContent = fmt(discretionary);
+    $('outSavings').textContent = fmt(savings);
+    $('outDebt').textContent = fmt(debt);
+
+    $('needsTotal').textContent = fmt(needs);
+    $('wantsTotal').textContent = fmt(wants);
+    $('saveTotal').textContent = fmt(save);
+
+    $('needsShare').textContent = pct(share(needs)) + ' of income';
+    $('wantsShare').textContent = pct(share(wants)) + ' of income';
+    $('saveShare').textContent = pct(share(save)) + ' of income';
+
+    $('needsBench').textContent = fmt(income * 0.5);
+    $('wantsBench').textContent = fmt(income * 0.3);
+    $('saveBench').textContent = fmt(income * 0.2);
+
+    setBar('needsBar', share(needs), 0.5);
+    setBar('wantsBar', share(wants), 0.3);
+    setBar('saveBar', share(save), 0.2);
+
+    setFlag('needsFlag', share(needs), 0.5, 'Needs', true);
+    setFlag('wantsFlag', share(wants), 0.3, 'Wants', true);
+    setFlag('saveFlag', share(save), 0.2, 'Savings & debt', false);
+
+    $('sumIncome').textContent = fmt(income);
+    $('sumAllocated').textContent = fmt(allocated);
+    $('leftoverLabel').textContent = leftover < 0 ? 'Shortfall' : 'Unallocated / surplus';
+    $('sumLeftover').textContent = (leftover < 0 ? '-' : '') + fmt(Math.abs(leftover));
+
+    const v = $('verdict');
+    const hot = [];
+    if (share(needs) > 0.5) hot.push('needs');
+    if (share(wants) > 0.3) hot.push('wants');
+    if (income === 0) {
+      v.className = 'verdict warn';
+      v.innerHTML = 'Enter your take-home income to compare against the benchmark.';
+    } else if (leftover < -0.5) {
+      v.className = 'verdict warn';
+      v.innerHTML = 'Your plan spends <strong>' + fmt(-leftover) + '</strong> more than you take home. Trim a category or the shortfall becomes debt.';
+    } else if (hot.length) {
+      v.className = 'verdict warn';
+      v.innerHTML = 'Running hot on <strong>' + hot.join(' and ') + '</strong>. That\'s common, especially with housing, but it\'s the first place to look if savings feel tight.';
+    } else if (share(save) >= 0.2) {
+      v.className = 'verdict good';
+      v.innerHTML = 'On track. All three buckets are within the 50/30/20 guideline' + (leftover > 0.5 ? ', with <strong>' + fmt(leftover) + '</strong> still unassigned to put toward savings.' : '.');
+    } else {
+      v.className = 'verdict good';
+      v.innerHTML = 'Needs and wants are within benchmark. Moving toward <strong>' + fmt(income * 0.2) + '</strong> in savings and debt payoff would complete the 20%.';
+    }
+
+    // Save for the emergency fund and debt payoff calculators (same session only)
+    hmSave({
+      takeHomeIncome: income,
+      housing: housing, transportation: transportation, food: food,
+      savings: savings, debtPayments: debt, discretionary: discretionary,
+      essentialExpenses: needs,
+      monthlySavingsCapacity: Math.max(0, savings + Math.max(0, leftover))
+    });
+  }
+
+  function setBar(id, actualShare, bench) {
+    const el = $(id);
+    // scale so the benchmark mark sits at its labeled percent; cap bar at 100% width
+    const width = Math.min(100, actualShare * 100);
+    el.style.width = width + '%';
+    el.className = 'bar-fill' + (actualShare > bench + 0.001 ? ' hot' : '');
+  }
+
+  function setFlag(id, actualShare, bench, label, essential) {
+    const el = $(id);
+    if (actualShare > bench + 0.001) {
+      const over = (actualShare - bench) * 100;
+      el.className = 'flag hot';
+      el.textContent = label + ' is about ' + over.toFixed(0) + ' points over the ' + pct(bench) + ' benchmark.';
+    } else {
+      el.className = 'flag ok';
+      el.textContent = essential ? label + ' is within the ' + pct(bench) + ' benchmark.' : label + ' meets the ' + pct(bench) + ' target.';
+    }
+  }
+
+  // Prefill from a prior calculator in this session
+  function offerPrefill() {
+    const d = hmLoad();
+    if (d && (d.housing != null || d.essentialExpenses != null || d.takeHomeIncome != null)) {
+      // Only offer if this page hasn't been the one that saved (i.e. values differ from defaults is hard to know; always offer if data exists)
+      $('prefill').classList.add('show');
+      $('prefillApply').addEventListener('click', () => {
+        if (d.takeHomeIncome != null) $('income').value = d.takeHomeIncome;
+        if (d.housing != null) $('housing').value = d.housing;
+        if (d.transportation != null) $('transportation').value = d.transportation;
+        if (d.food != null) $('food').value = d.food;
+        if (d.savings != null) $('savings').value = d.savings;
+        if (d.debtPayments != null) $('debt').value = d.debtPayments;
+        if (d.discretionary != null) $('discretionary').value = d.discretionary;
+        $('prefill').classList.remove('show');
+        calc();
+      });
+      $('prefillDismiss').addEventListener('click', () => $('prefill').classList.remove('show'));
+    }
+  }
+
+  inputs.forEach(id => $(id).addEventListener('input', calc));
+  offerPrefill();
+  calc();
+</script>
+
+</body>
+</html>

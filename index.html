@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HouseholdMath — Free Personal Finance Calculators, Plainly Explained</title>
+<meta name="description" content="Free calculators for household budgeting, emergency funds, debt payoff, savings goals, and housing affordability. No login, no sign-up, no advisor sales pitch.">
+<link rel="canonical" href="https://pf-builds.github.io/householdmath/">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #F7F3EC;
+    --panel: #FFFFFF;
+    --ink: #1B2B23;
+    --ink-soft: #5E6E63;
+    --border: #E4DDCF;
+    --forest: #1B3A2F;
+    --forest-bg: #E8EEE8;
+    --gold: #B67F33;
+    --gold-bg: #F4EAD5;
+    --good: #1F6F4C;
+    --good-bg: #E4F1E8;
+    --warn: #A6551D;
+    --warn-bg: #FBEEE3;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--forest); }
+
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 44px;
+  }
+  .site-nav .brand-link {
+    color: var(--forest);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+  .site-nav .sep { color: var(--border); }
+
+  .tools-dropdown { position: relative; }
+  .tools-dropdown summary { cursor: pointer; color: var(--ink-soft); list-style: none; font-weight: 600; }
+  .tools-dropdown summary::-webkit-details-marker { display: none; }
+  .tools-dropdown summary:hover { color: var(--forest); }
+  .tools-menu {
+    position: absolute; top: 100%; left: 0; margin-top: 8px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px; display: flex; flex-direction: column; min-width: 250px;
+    box-shadow: 0 8px 24px rgba(27,58,47,0.14); z-index: 10;
+  }
+  .tools-menu a { padding: 8px 10px; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 0.82rem; }
+  .tools-menu a:hover { background: var(--forest-bg); color: var(--forest); }
+
+  .layout { display: grid; grid-template-columns: 1fr 300px; gap: 40px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .sidebar-ad { display: none; } }
+
+  .main-col { min-width: 0; }
+
+  header.hero { margin-bottom: 24px; }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(2rem, 4.5vw, 2.8rem);
+    line-height: 1.15;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+
+  .sub { color: var(--ink-soft); font-size: 1.06rem; max-width: 60ch; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 26px;
+    margin-bottom: 20px;
+  }
+
+  .card h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 18px;
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 4px;
+  }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field .hint { font-size: 0.78rem; color: var(--ink-soft); font-weight: 400; margin-top: 4px; }
+
+  input[type="number"] {
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 1rem;
+    font-family: 'IBM Plex Mono', monospace;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  input[type="number"]:focus { outline: 2px solid var(--forest); outline-offset: 1px; border-color: var(--forest); }
+
+  .ledger { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 8px; }
+  .ledger-head { padding: 18px 26px 4px; }
+  .ledger-head .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  .col { padding: 14px 26px 22px; border-top: 1px solid var(--border); background: var(--forest-bg); }
+
+  .line {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+    padding: 5px 0;
+    color: var(--ink-soft);
+  }
+  .line span:last-child { color: var(--ink); }
+
+  .line.benchmark { color: var(--ink-soft); font-size: 0.82rem; }
+  .line.benchmark span:last-child { color: var(--ink-soft); }
+
+  .line.total {
+    border-top: 1px dashed var(--border);
+    margin-top: 8px;
+    padding-top: 10px;
+    font-weight: 700;
+    color: var(--forest);
+    font-size: 1.05rem;
+  }
+  .line.total span:last-child { color: var(--forest); font-family: 'Fraunces', serif; font-size: 1.15rem; }
+
+  .verdict {
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    margin-top: 14px;
+    font-weight: 500;
+  }
+  .verdict.good { background: var(--good-bg); border: 1px solid #BFE0CC; color: var(--good); }
+  .verdict.warn { background: var(--warn-bg); border: 1px solid #E8CBB0; color: var(--warn); }
+  .verdict strong { font-family: 'IBM Plex Mono', monospace; }
+
+  .cta-row { padding: 16px 26px 22px; border-top: 1px solid var(--border); }
+  .cta-row a { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 0.88rem; text-decoration: none; }
+  .cta-row a:hover { text-decoration: underline; }
+
+  .grid-heading {
+    font-family: 'Fraunces', serif; font-size: 1.4rem; font-weight: 600; margin: 40px 0 6px;
+  }
+  .handoff-note {
+    font-size: 0.86rem; color: var(--ink-soft); margin: 0 0 18px; max-width: 68ch;
+  }
+  .handoff-note strong { color: var(--forest); }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin: 8px 0;
+  }
+
+  .tool-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: border-color 0.15s ease;
+  }
+  .tool-card:hover { border-color: var(--forest); }
+
+  .tool-card .icon { font-size: 1.4rem; margin-bottom: 10px; }
+
+  .tool-card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.12rem;
+    font-weight: 600;
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+
+  .tool-card p { color: var(--ink-soft); font-size: 0.88rem; margin: 0 0 12px; }
+
+  .tool-card .cta { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--gold); font-weight: 600; }
+
+  section.trust {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin: 28px 0 8px;
+  }
+  section.trust p {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink);
+    font-size: 0.92rem;
+    margin: 0;
+  }
+  section.trust p strong { color: var(--forest); }
+
+  .ad-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); margin: 24px 0 10px; }
+  .sidebar-ad .ad-label { margin-top: 0; }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+  footer a { color: var(--ink-soft); }
+</style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6054690102277779" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="site-nav">
+  <a href="index.html" class="brand-link">HouseholdMath</a>
+  <span class="sep">·</span>
+  <details class="tools-dropdown">
+    <summary>All calculators &#9662;</summary>
+    <div class="tools-menu">
+      <a href="budget-calculator.html">Household budget</a>
+      <a href="emergency-fund-calculator.html">Emergency fund</a>
+      <a href="debt-payoff-calculator.html">Debt payoff (avalanche vs snowball)</a>
+      <a href="savings-goal-calculator.html">Savings goal &amp; compound growth</a>
+      <a href="housing-affordability-calculator.html">Housing affordability</a>
+    </div>
+  </details>
+</nav>
+
+<div class="layout">
+<div class="main-col">
+
+  <header class="hero">
+    <h1>Do the household math before the money's spent</h1>
+    <p class="sub">Five free calculators for the everyday money decisions, budgeting, emergency savings, paying down debt, hitting a savings goal, and what home you can actually afford. Enter your own numbers, get a straight answer. No login, no advisor pitch.</p>
+  </header>
+
+  <div class="card">
+    <h2>Try it: where does your income go?</h2>
+    <p style="color:var(--ink-soft); font-size:0.9rem; margin:-8px 0 18px;">Enter your monthly take-home, then roughly what goes to needs, wants, and savings. We compare it to the 50/30/20 rule of thumb.</p>
+    <div class="field-grid">
+      <div class="field">
+        <label for="heroIncome">Monthly take-home</label>
+        <input type="number" id="heroIncome" value="5000" min="0" step="100">
+      </div>
+      <div class="field">
+        <label for="heroNeeds">Needs (housing, food, transport)</label>
+        <input type="number" id="heroNeeds" value="2600" min="0" step="50">
+      </div>
+      <div class="field">
+        <label for="heroWants">Wants (discretionary)</label>
+        <input type="number" id="heroWants" value="1400" min="0" step="50">
+      </div>
+      <div class="field">
+        <label for="heroSavings">Savings &amp; extra debt payoff</label>
+        <input type="number" id="heroSavings" value="1000" min="0" step="50">
+      </div>
+    </div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head"><div class="eyebrow">Your split vs. 50 / 30 / 20</div></div>
+    <div class="col">
+      <div class="line"><span>Needs</span><span id="heroNeedsOut">—</span></div>
+      <div class="line benchmark"><span>Benchmark: 50% of take-home</span><span id="heroNeedsBench">—</span></div>
+      <div class="line"><span>Wants</span><span id="heroWantsOut">—</span></div>
+      <div class="line benchmark"><span>Benchmark: 30% of take-home</span><span id="heroWantsBench">—</span></div>
+      <div class="line"><span>Savings &amp; debt payoff</span><span id="heroSavingsOut">—</span></div>
+      <div class="line benchmark"><span>Benchmark: 20% of take-home</span><span id="heroSavingsBench">—</span></div>
+      <div class="line total"><span>Unallocated</span><span id="heroLeftover">—</span></div>
+      <div class="verdict" id="heroVerdict"></div>
+    </div>
+    <div class="cta-row"><a href="budget-calculator.html">Open the full budget calculator, itemized by category →</a></div>
+  </div>
+
+  <!-- Below Hero Result Ad -->
+  <div class="ad-label">Advertisement</div>
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="9334818123" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+  <h2 class="grid-heading">All calculators</h2>
+  <p class="handoff-note">Enter your income and expenses once. In the same browser session, these tools can <strong>carry your numbers forward</strong> — your essential expenses flow from the budget into the emergency fund calculator, your debt payments into the payoff calculator. Nothing is saved to a server or kept after you close the tab.</p>
+  <div class="tools-grid">
+    <a class="tool-card" href="budget-calculator.html">
+      <div class="icon">📊</div>
+      <h3>Household budget</h3>
+      <p>Itemize your spending by category and see it against the 50/30/20 rule. Flags the buckets running hot.</p>
+      <div class="cta">Open calculator →</div>
+    </a>
+    <a class="tool-card" href="emergency-fund-calculator.html">
+      <div class="icon">☔</div>
+      <h3>Emergency fund</h3>
+      <p>How many months of essentials you have saved, your target at 3/6/9 months, and how long the gap takes to close.</p>
+      <div class="cta">Open calculator →</div>
+    </a>
+    <a class="tool-card" href="debt-payoff-calculator.html">
+      <div class="icon">💳</div>
+      <h3>Debt payoff: avalanche vs snowball</h3>
+      <p>List your debts and compare highest-rate-first against smallest-balance-first, side by side, with total interest.</p>
+      <div class="cta">Open calculator →</div>
+    </a>
+    <a class="tool-card" href="savings-goal-calculator.html">
+      <div class="icon">🎯</div>
+      <h3>Savings goal &amp; compound growth</h3>
+      <p>What monthly contribution reaches your goal, or how long your plan takes, with contributions and growth split out.</p>
+      <div class="cta">Open calculator →</div>
+    </a>
+    <a class="tool-card" href="housing-affordability-calculator.html">
+      <div class="icon">🏠</div>
+      <h3>Housing affordability</h3>
+      <p>An affordable monthly payment and price range from your income and debts, using a standard debt-to-income method.</p>
+      <div class="cta">Open calculator →</div>
+    </a>
+  </div>
+
+  <!-- Between Grid and Explainer Ad -->
+  <div class="ad-label">Advertisement</div>
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="9334818123" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+  <section class="trust">
+    <p>Every formula and default figure traces to a <strong>citable public source</strong> — CFPB, BLS, FDIC, and published planning methodology. No products, no lenders, no lead forms.</p>
+  </section>
+
+  <footer>
+    <p>HouseholdMath provides general estimates for planning purposes only. It is not professional financial, tax, or legal advice. Consult a qualified advisor before making individual financial decisions.</p>
+    <p><a href="privacy.html">Privacy policy</a></p>
+  </footer>
+
+</div>
+
+<aside class="sidebar-ad">
+  <div class="ad-label">Advertisement</div>
+  <!-- Sidebar Ad (desktop only) -->
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="9334818123" data-ad-format="auto"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</aside>
+</div>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+  const pct = n => (n * 100).toFixed(0) + '%';
+
+  function heroCalc() {
+    const income = Math.max(0, parseFloat($('heroIncome').value) || 0);
+    const needs = Math.max(0, parseFloat($('heroNeeds').value) || 0);
+    const wants = Math.max(0, parseFloat($('heroWants').value) || 0);
+    const savings = Math.max(0, parseFloat($('heroSavings').value) || 0);
+    const leftover = income - needs - wants - savings;
+
+    const share = v => income > 0 ? v / income : 0;
+
+    $('heroNeedsOut').textContent = fmt(needs) + '  (' + pct(share(needs)) + ')';
+    $('heroWantsOut').textContent = fmt(wants) + '  (' + pct(share(wants)) + ')';
+    $('heroSavingsOut').textContent = fmt(savings) + '  (' + pct(share(savings)) + ')';
+    $('heroNeedsBench').textContent = fmt(income * 0.5);
+    $('heroWantsBench').textContent = fmt(income * 0.3);
+    $('heroSavingsBench').textContent = fmt(income * 0.2);
+    $('heroLeftover').textContent = (leftover < 0 ? '-' : '') + fmt(Math.abs(leftover));
+
+    const v = $('heroVerdict');
+    if (income === 0) {
+      v.className = 'verdict warn';
+      v.innerHTML = 'Enter your monthly take-home to see how your split compares.';
+      return;
+    }
+    const hot = [];
+    if (share(needs) > 0.50) hot.push('needs');
+    if (share(wants) > 0.30) hot.push('wants');
+    if (leftover < -0.5) {
+      v.className = 'verdict warn';
+      v.innerHTML = 'You\'re allocating <strong>' + fmt(-leftover) + '</strong> more than you take home. Something has to give.';
+    } else if (hot.length) {
+      v.className = 'verdict warn';
+      v.innerHTML = 'Running hot on <strong>' + hot.join(' and ') + '</strong> versus the benchmark. The full calculator shows which categories to look at.';
+    } else if (share(savings) >= 0.20) {
+      v.className = 'verdict good';
+      v.innerHTML = 'On track — your split meets or beats the 50/30/20 guideline.';
+    } else {
+      v.className = 'verdict good';
+      v.innerHTML = 'Needs and wants are within benchmark. Nudging savings toward <strong>' + fmt(income * 0.2) + '</strong> would hit the full 20%.';
+    }
+  }
+
+  document.querySelectorAll('#heroIncome, #heroNeeds, #heroWants, #heroSavings').forEach(el => el.addEventListener('input', heroCalc));
+  heroCalc();
+</script>
+
+</body>
+</html>
