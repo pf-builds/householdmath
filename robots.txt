@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pf-builds.github.io/householdmath/sitemap.xml
