@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Household Budget Calculator — Your Spending vs. the 50/30/20 Rule</title>
-<meta name="description" content="Itemize your monthly spending by category and see how it compares to the 50/30/20 budgeting rule. Flags the buckets running hot and shows your surplus or shortfall.">
+<meta name="description" content="Check your budget fast or build it category by category, then see how it compares to the 50/30/20 rule. Flags the buckets running hot and shows your surplus or shortfall.">
 <link rel="canonical" href="https://pf-builds.github.io/householdmath/budget-calculator.html">
 <script type="application/ld+json">
 {
@@ -120,6 +120,8 @@
     padding: 12px 16px; margin-bottom: 20px; font-size: 0.9rem;
   }
   .prefill.show { display: flex; }
+  .prefill .pf-body { flex: 1; }
+  .prefill .pf-body strong { color: var(--forest); }
   .prefill button {
     font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; font-weight: 600;
     background: var(--forest); color: #fff; border: none; border-radius: 7px;
@@ -128,24 +130,53 @@
   .prefill button:hover { background: #14231C; }
   .prefill .dismiss { background: none; color: var(--ink-soft); padding: 8px 6px; }
 
+  /* Mode tabs */
+  .mode-toggle { display: flex; gap: 8px; margin-bottom: 22px; }
+  .mode-toggle button {
+    flex: 1; font-family: 'Inter', sans-serif; font-size: 0.92rem; font-weight: 600;
+    background: var(--bg); color: var(--ink-soft); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; cursor: pointer;
+  }
+  .mode-toggle button.active { background: var(--forest); color: #fff; border-color: var(--forest); }
+
   .field { margin-bottom: 18px; }
   .field label { display: block; font-size: 0.88rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
   .field .hint { font-size: 0.8rem; color: var(--ink-soft); font-weight: 400; margin-top: 4px; }
 
-  input[type="number"] {
+  input[type="number"], input[type="text"] {
     width: 100%; padding: 11px 12px; font-size: 1rem; font-family: 'IBM Plex Mono', monospace;
     border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--ink);
   }
-  input[type="number"]:focus { outline: 2px solid var(--forest); outline-offset: 1px; border-color: var(--forest); }
+  input:focus, select:focus { outline: 2px solid var(--forest); outline-offset: 1px; border-color: var(--forest); }
 
   .income-field input { border-color: var(--forest); background: var(--forest-bg); }
-
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
 
   .cat-group-label {
     font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; text-transform: uppercase;
     letter-spacing: 0.08em; color: var(--gold); font-weight: 600; margin: 22px 0 12px;
+  }
+
+  /* Build-mode itemized rows */
+  .build-group { margin-bottom: 10px; }
+  .build-head, .build-row { display: grid; grid-template-columns: 1.7fr 1fr 1.1fr 34px; gap: 10px; align-items: center; }
+  .build-head { margin-bottom: 8px; }
+  .build-head span { font-size: 0.72rem; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+  .build-row { margin-bottom: 10px; }
+  .build-row input, .build-row select {
+    width: 100%; padding: 10px 10px; font-size: 0.95rem; font-family: 'IBM Plex Mono', monospace;
+    border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--ink);
+  }
+  .build-row input.b-label { font-family: 'Inter', sans-serif; }
+  .build-row select.b-freq { font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer; }
+  .build-row .b-remove {
+    background: none; border: none; color: var(--ink-soft); font-size: 1.3rem; cursor: pointer; line-height: 1; padding: 4px; border-radius: 6px;
+  }
+  .build-row .b-remove:hover { color: var(--warn); background: var(--warn-bg); }
+  @media (max-width: 560px) {
+    .build-head { display: none; }
+    .build-row { grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; position: relative; }
+    .build-row .b-label { grid-column: 1 / -1; }
+    .build-row .b-remove { position: absolute; top: 6px; right: 6px; }
   }
 
   .ledger { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 12px; }
@@ -163,6 +194,7 @@
   .line.sub { border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 8px; font-weight: 700; color: var(--ink); }
   .line.sub span:last-child { color: var(--ink); }
   .line.bench { font-size: 0.8rem; }
+  .freq-note { color: var(--gold); font-size: 0.78rem; }
 
   .bar { height: 8px; border-radius: 5px; background: var(--border); overflow: hidden; margin: 10px 0 4px; position: relative; }
   .bar-fill { height: 100%; border-radius: 5px; background: var(--forest); transition: width 0.2s ease; }
@@ -228,17 +260,22 @@
 
   <header>
     <h1>Where does your income actually go?</h1>
-    <p class="sub">Itemize your monthly spending and see it grouped into needs, wants, and savings against the 50/30/20 rule of thumb. The calculator flags any bucket running hot and shows whether you finish the month ahead or behind.</p>
+    <p class="sub">Check your budget fast with three numbers, or build it up category by category, then see it grouped into needs, wants, and savings against the 50/30/20 rule of thumb. The calculator flags any bucket running hot and shows whether you finish the month ahead or behind.</p>
   </header>
 
   <div class="card">
     <h2>Your monthly numbers</h2>
-    <p class="card-note">Use take-home pay (after taxes and deductions) and typical monthly amounts. Average irregular costs like insurance into a monthly figure.</p>
+    <p class="card-note">Use take-home pay, the amount that lands in your account after taxes and deductions.</p>
 
     <div id="prefill" class="prefill">
-      <div style="flex:1;">Found saved figures from another calculator this session. Load them here?</div>
-      <button id="prefillApply" type="button">Load</button>
+      <div class="pf-body">Found your <strong>budget</strong> from earlier this session. Restore it here?</div>
+      <button id="prefillApply" type="button">Restore</button>
       <button id="prefillDismiss" class="dismiss" type="button">No thanks</button>
+    </div>
+
+    <div class="mode-toggle" id="modeToggle">
+      <button type="button" data-mode="check">Check my budget</button>
+      <button type="button" data-mode="build">Build my budget</button>
     </div>
 
     <div class="field income-field">
@@ -247,80 +284,40 @@
       <div class="hint">What actually lands in your account each month.</div>
     </div>
 
-    <div class="cat-group-label">Needs</div>
-    <div class="row2">
+    <!-- CHECK MODE -->
+    <div id="checkPanel">
+      <div class="cat-group-label">Your spending in three buckets</div>
       <div class="field">
-        <label for="housing">Housing</label>
-        <input type="number" id="housing" value="1600" min="0" step="50">
-        <div class="hint">Rent or mortgage, utilities, insurance.</div>
+        <label for="checkNeeds">Needs</label>
+        <input type="number" id="checkNeeds" min="0" step="50">
+        <div class="hint">Housing, utilities, insurance, transportation, food.</div>
       </div>
       <div class="field">
-        <label for="transportation">Transportation</label>
-        <input type="number" id="transportation" value="500" min="0" step="25">
-        <div class="hint">Car payment, gas, transit, upkeep.</div>
-      </div>
-    </div>
-    <div class="field">
-      <label for="food">Food (groceries &amp; essentials)</label>
-      <input type="number" id="food" value="700" min="0" step="25">
-      <div class="hint">Groceries and household basics. Put restaurants under discretionary.</div>
-    </div>
-
-    <div class="cat-group-label">Savings &amp; debt</div>
-    <div class="row2">
-      <div class="field">
-        <label for="savings">Savings &amp; investing</label>
-        <input type="number" id="savings" value="600" min="0" step="25">
-        <div class="hint">Emergency fund, retirement, other savings.</div>
+        <label for="checkWants">Wants</label>
+        <input type="number" id="checkWants" min="0" step="50">
+        <div class="hint">Discretionary spending, subscriptions, entertainment, travel.</div>
       </div>
       <div class="field">
-        <label for="debt">Debt payments</label>
-        <input type="number" id="debt" value="400" min="0" step="25">
-        <div class="hint">Credit cards, student and personal loans.</div>
+        <label for="checkSavings">Savings &amp; debt</label>
+        <input type="number" id="checkSavings" min="0" step="50">
+        <div class="hint">Savings, investing, and debt payments.</div>
+      </div>
+      <div class="field">
+        <label for="checkIrregular">Annual &amp; irregular costs <span style="font-weight:400;">(optional)</span></label>
+        <input type="number" id="checkIrregular" min="0" step="100">
+        <div class="hint">Yearly bills like insurance or registration. Divided by 12 and added to needs.</div>
       </div>
     </div>
 
-    <div class="cat-group-label">Wants</div>
-    <div class="field">
-      <label for="discretionary">Discretionary</label>
-      <input type="number" id="discretionary" value="1000" min="0" step="25">
-      <div class="hint">Dining out, subscriptions, entertainment, hobbies, travel.</div>
+    <!-- BUILD MODE -->
+    <div id="buildPanel" style="display:none;">
+      <div id="buildGroups"></div>
     </div>
   </div>
 
   <div class="ledger">
     <div class="ledger-head"><div class="eyebrow">Your budget vs. 50 / 30 / 20</div></div>
-
-    <div class="bucket">
-      <div class="bucket-title"><strong>Needs</strong><span class="share" id="needsShare">—</span></div>
-      <div class="line"><span>Housing</span><span id="outHousing">—</span></div>
-      <div class="line"><span>Transportation</span><span id="outTransport">—</span></div>
-      <div class="line"><span>Food</span><span id="outFood">—</span></div>
-      <div class="line sub"><span>Needs subtotal</span><span id="needsTotal">—</span></div>
-      <div class="bar"><div class="bar-fill" id="needsBar"></div><div class="bar-mark" style="left:50%;"></div></div>
-      <div class="line bench"><span>Benchmark 50%</span><span id="needsBench">—</span></div>
-      <div class="flag" id="needsFlag"></div>
-    </div>
-
-    <div class="bucket">
-      <div class="bucket-title"><strong>Wants</strong><span class="share" id="wantsShare">—</span></div>
-      <div class="line"><span>Discretionary</span><span id="outDisc">—</span></div>
-      <div class="line sub"><span>Wants subtotal</span><span id="wantsTotal">—</span></div>
-      <div class="bar"><div class="bar-fill" id="wantsBar"></div><div class="bar-mark" style="left:30%;"></div></div>
-      <div class="line bench"><span>Benchmark 30%</span><span id="wantsBench">—</span></div>
-      <div class="flag" id="wantsFlag"></div>
-    </div>
-
-    <div class="bucket">
-      <div class="bucket-title"><strong>Savings &amp; debt</strong><span class="share" id="saveShare">—</span></div>
-      <div class="line"><span>Savings &amp; investing</span><span id="outSavings">—</span></div>
-      <div class="line"><span>Debt payments</span><span id="outDebt">—</span></div>
-      <div class="line sub"><span>Savings &amp; debt subtotal</span><span id="saveTotal">—</span></div>
-      <div class="bar"><div class="bar-fill" id="saveBar"></div><div class="bar-mark" style="left:20%;"></div></div>
-      <div class="line bench"><span>Benchmark 20%</span><span id="saveBench">—</span></div>
-      <div class="flag" id="saveFlag"></div>
-    </div>
-
+    <div id="ledgerBuckets"></div>
     <div class="summary">
       <div class="line"><span>Total take-home</span><span id="sumIncome">—</span></div>
       <div class="line"><span>Total allocated</span><span id="sumAllocated">—</span></div>
@@ -387,6 +384,8 @@
   const $ = id => document.getElementById(id);
   const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
   const pct = n => (n * 100).toFixed(0) + '%';
+  const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const escAttr = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   // --- Shared cross-calculator session store (never persisted beyond the tab) ---
   const HM_KEY = 'householdmath_v1';
@@ -397,60 +396,144 @@
     try { sessionStorage.setItem(HM_KEY, JSON.stringify(d)); } catch (e) {}
   }
 
-  const inputs = ['income','housing','transportation','food','savings','debt','discretionary'];
+  // --- One shared data model. Both modes read and write this array. ---
+  const FREQ = { monthly: 1, quarterly: 3, annual: 12 };
+  const BUCKETS = ['needs', 'wants', 'savings'];
+  const BUCKET_LABEL = { needs: 'Needs', wants: 'Wants', savings: 'Savings & debt' };
+  const BENCH = { needs: 0.5, wants: 0.3, savings: 0.2 };
 
-  function calc() {
-    const income = Math.max(0, parseFloat($('income').value) || 0);
-    const housing = Math.max(0, parseFloat($('housing').value) || 0);
-    const transportation = Math.max(0, parseFloat($('transportation').value) || 0);
-    const food = Math.max(0, parseFloat($('food').value) || 0);
-    const savings = Math.max(0, parseFloat($('savings').value) || 0);
-    const debt = Math.max(0, parseFloat($('debt').value) || 0);
-    const discretionary = Math.max(0, parseFloat($('discretionary').value) || 0);
+  function defaultItems() {
+    return [
+      { id: 'housing', label: 'Housing', amount: 1600, frequency: 'monthly', bucket: 'needs', isCustom: false },
+      { id: 'transportation', label: 'Transportation', amount: 500, frequency: 'monthly', bucket: 'needs', isCustom: false },
+      { id: 'food', label: 'Food & groceries', amount: 700, frequency: 'monthly', bucket: 'needs', isCustom: false },
+      { id: 'discretionary', label: 'Discretionary', amount: 1000, frequency: 'monthly', bucket: 'wants', isCustom: false },
+      { id: 'savings', label: 'Savings & investing', amount: 600, frequency: 'monthly', bucket: 'savings', isCustom: false },
+      { id: 'debt', label: 'Debt payments', amount: 400, frequency: 'monthly', bucket: 'savings', isCustom: false }
+    ];
+  }
 
-    const needs = housing + transportation + food;
-    const wants = discretionary;
-    const save = savings + debt;
-    const allocated = needs + wants + save;
+  const state = { income: 5000, mode: 'check', items: defaultItems() };
+
+  const monthlyOf = item => (item.amount || 0) / FREQ[item.frequency];
+  const bucketMonthly = bucket => state.items.filter(i => i.bucket === bucket).reduce((s, i) => s + monthlyOf(i), 0);
+
+  // --- Mode switching (re-render only; never mutates the array) ---
+  function setMode(mode) {
+    state.mode = mode;
+    const url = new URL(location.href);
+    url.searchParams.set('mode', mode);
+    history.replaceState(null, '', url);
+    document.querySelectorAll('#modeToggle button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    $('checkPanel').style.display = mode === 'check' ? '' : 'none';
+    $('buildPanel').style.display = mode === 'build' ? '' : 'none';
+    if (mode === 'check') renderCheck(); else renderBuild();
+    recompute();
+  }
+
+  // --- CHECK mode: array -> the three aggregate fields + irregular ---
+  function renderCheck() {
+    const irr = state.items.find(i => i.id === 'check-irregular');
+    const needsM = state.items.filter(i => i.bucket === 'needs' && i.id !== 'check-irregular').reduce((s, i) => s + monthlyOf(i), 0);
+    $('checkNeeds').value = needsM ? Math.round(needsM) : '';
+    $('checkWants').value = bucketMonthly('wants') ? Math.round(bucketMonthly('wants')) : '';
+    $('checkSavings').value = bucketMonthly('savings') ? Math.round(bucketMonthly('savings')) : '';
+    $('checkIrregular').value = irr ? irr.amount : '';
+  }
+
+  // Editing a Check aggregate collapses just that bucket to a single item.
+  function setCheckBucket(bucket, val) {
+    state.items = state.items.filter(i => !(i.bucket === bucket && i.id !== 'check-irregular'));
+    state.items.push({ id: 'check-' + bucket, label: BUCKET_LABEL[bucket], amount: val, frequency: 'monthly', bucket: bucket, isCustom: false });
+  }
+  function setIrregular(val) {
+    state.items = state.items.filter(i => i.id !== 'check-irregular');
+    if (val > 0) state.items.push({ id: 'check-irregular', label: 'Annual & irregular costs', amount: val, frequency: 'annual', bucket: 'needs', isCustom: false });
+  }
+
+  // --- BUILD mode: array -> itemized rows grouped by bucket ---
+  function renderBuild() {
+    const wrap = $('buildGroups');
+    wrap.innerHTML = '';
+    BUCKETS.forEach(bucket => {
+      const group = document.createElement('div');
+      group.className = 'build-group';
+      group.innerHTML =
+        '<div class="cat-group-label">' + BUCKET_LABEL[bucket] + '</div>' +
+        '<div class="build-head"><span>Item</span><span>Amount</span><span>Every</span><span></span></div>';
+      state.items.filter(i => i.bucket === bucket).forEach(item => group.appendChild(buildRow(item)));
+      wrap.appendChild(group);
+    });
+  }
+
+  function buildRow(item) {
+    const row = document.createElement('div');
+    row.className = 'build-row';
+    row.innerHTML =
+      '<input class="b-label" type="text" value="' + escAttr(item.label) + '">' +
+      '<input class="b-amount" type="number" min="0" step="25" value="' + item.amount + '">' +
+      '<select class="b-freq"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="annual">Annual</option></select>' +
+      '<button class="b-remove" type="button" title="Remove">&times;</button>';
+    row.querySelector('.b-freq').value = item.frequency;
+    row.querySelector('.b-label').addEventListener('input', e => { item.label = e.target.value; recompute(); });
+    row.querySelector('.b-amount').addEventListener('input', e => { item.amount = Math.max(0, parseFloat(e.target.value) || 0); recompute(); });
+    row.querySelector('.b-freq').addEventListener('change', e => { item.frequency = e.target.value; recompute(); });
+    row.querySelector('.b-remove').addEventListener('click', () => { state.items = state.items.filter(x => x !== item); renderBuild(); recompute(); });
+    return row;
+  }
+
+  // --- Results ledger (reads the array; identical in both modes) ---
+  function recompute() { renderLedger(); saveHandoff(); }
+
+  function renderLedger() {
+    const income = state.income;
+    const wrap = $('ledgerBuckets');
+    wrap.innerHTML = '';
+    let allocated = 0;
+    BUCKETS.forEach(bucket => {
+      const items = state.items.filter(i => i.bucket === bucket);
+      const subtotal = items.reduce((s, i) => s + monthlyOf(i), 0);
+      allocated += subtotal;
+      const share = income > 0 ? subtotal / income : 0;
+      const bench = BENCH[bucket];
+      const hot = share > bench + 0.001;
+      let lines = items.map(i => {
+        const fn = i.frequency !== 'monthly' ? ' <span class="freq-note">(' + i.frequency + ')</span>' : '';
+        return '<div class="line"><span>' + esc(i.label) + fn + '</span><span>' + fmt(monthlyOf(i)) + '</span></div>';
+      }).join('');
+      if (!items.length) lines = '<div class="line"><span style="opacity:.6;">No items yet</span><span>$0</span></div>';
+      const barW = Math.min(100, share * 100);
+      const flagTxt = hot
+        ? BUCKET_LABEL[bucket] + ' is about ' + ((share - bench) * 100).toFixed(0) + ' points over the ' + pct(bench) + ' benchmark.'
+        : (bucket === 'savings' ? BUCKET_LABEL[bucket] + ' meets the ' + pct(bench) + ' target.' : BUCKET_LABEL[bucket] + ' is within the ' + pct(bench) + ' benchmark.');
+      const block = document.createElement('div');
+      block.className = 'bucket';
+      block.innerHTML =
+        '<div class="bucket-title"><strong>' + BUCKET_LABEL[bucket] + '</strong><span class="share">' + pct(share) + ' of income</span></div>' +
+        lines +
+        '<div class="line sub"><span>' + BUCKET_LABEL[bucket] + ' subtotal</span><span>' + fmt(subtotal) + '</span></div>' +
+        '<div class="bar"><div class="bar-fill' + (hot ? ' hot' : '') + '" style="width:' + barW + '%;"></div><div class="bar-mark" style="left:' + (bench * 100) + '%;"></div></div>' +
+        '<div class="line bench"><span>Benchmark ' + pct(bench) + '</span><span>' + fmt(income * bench) + '</span></div>' +
+        '<div class="flag ' + (hot ? 'hot' : 'ok') + '">' + flagTxt + '</div>';
+      wrap.appendChild(block);
+    });
+
     const leftover = income - allocated;
-    const share = v => income > 0 ? v / income : 0;
-
-    $('outHousing').textContent = fmt(housing);
-    $('outTransport').textContent = fmt(transportation);
-    $('outFood').textContent = fmt(food);
-    $('outDisc').textContent = fmt(discretionary);
-    $('outSavings').textContent = fmt(savings);
-    $('outDebt').textContent = fmt(debt);
-
-    $('needsTotal').textContent = fmt(needs);
-    $('wantsTotal').textContent = fmt(wants);
-    $('saveTotal').textContent = fmt(save);
-
-    $('needsShare').textContent = pct(share(needs)) + ' of income';
-    $('wantsShare').textContent = pct(share(wants)) + ' of income';
-    $('saveShare').textContent = pct(share(save)) + ' of income';
-
-    $('needsBench').textContent = fmt(income * 0.5);
-    $('wantsBench').textContent = fmt(income * 0.3);
-    $('saveBench').textContent = fmt(income * 0.2);
-
-    setBar('needsBar', share(needs), 0.5);
-    setBar('wantsBar', share(wants), 0.3);
-    setBar('saveBar', share(save), 0.2);
-
-    setFlag('needsFlag', share(needs), 0.5, 'Needs', true);
-    setFlag('wantsFlag', share(wants), 0.3, 'Wants', true);
-    setFlag('saveFlag', share(save), 0.2, 'Savings & debt', false);
-
     $('sumIncome').textContent = fmt(income);
     $('sumAllocated').textContent = fmt(allocated);
     $('leftoverLabel').textContent = leftover < 0 ? 'Shortfall' : 'Unallocated / surplus';
     $('sumLeftover').textContent = (leftover < 0 ? '-' : '') + fmt(Math.abs(leftover));
+    renderVerdict(income, leftover);
+  }
 
+  function renderVerdict(income, leftover) {
     const v = $('verdict');
+    const needsShare = income > 0 ? bucketMonthly('needs') / income : 0;
+    const wantsShare = income > 0 ? bucketMonthly('wants') / income : 0;
+    const saveShare = income > 0 ? bucketMonthly('savings') / income : 0;
     const hot = [];
-    if (share(needs) > 0.5) hot.push('needs');
-    if (share(wants) > 0.3) hot.push('wants');
+    if (needsShare > 0.5) hot.push('needs');
+    if (wantsShare > 0.3) hot.push('wants');
     if (income === 0) {
       v.className = 'verdict warn';
       v.innerHTML = 'Enter your take-home income to compare against the benchmark.';
@@ -460,68 +543,65 @@
     } else if (hot.length) {
       v.className = 'verdict warn';
       v.innerHTML = 'Running hot on <strong>' + hot.join(' and ') + '</strong>. That\'s common, especially with housing, but it\'s the first place to look if savings feel tight.';
-    } else if (share(save) >= 0.2) {
+    } else if (saveShare >= 0.2) {
       v.className = 'verdict good';
       v.innerHTML = 'On track. All three buckets are within the 50/30/20 guideline' + (leftover > 0.5 ? ', with <strong>' + fmt(leftover) + '</strong> still unassigned to put toward savings.' : '.');
     } else {
       v.className = 'verdict good';
       v.innerHTML = 'Needs and wants are within benchmark. Moving toward <strong>' + fmt(income * 0.2) + '</strong> in savings and debt payoff would complete the 20%.';
     }
+  }
 
-    // Save for the emergency fund and debt payoff calculators (same session only)
+  // --- Handoff to emergency fund / debt payoff (mode-agnostic, normalized) ---
+  function saveHandoff() {
+    const debtItem = state.items.find(i => i.id === 'debt');
+    const debtM = debtItem ? monthlyOf(debtItem) : 0;
+    const savingsM = state.items.filter(i => i.bucket === 'savings' && i.id !== 'debt').reduce((s, i) => s + monthlyOf(i), 0);
+    const allocated = state.items.reduce((s, i) => s + monthlyOf(i), 0);
+    const leftover = state.income - allocated;
     hmSave({
-      takeHomeIncome: income,
-      housing: housing, transportation: transportation, food: food,
-      savings: savings, debtPayments: debt, discretionary: discretionary,
-      essentialExpenses: needs,
-      monthlySavingsCapacity: Math.max(0, savings + Math.max(0, leftover))
+      takeHomeIncome: state.income,
+      essentialExpenses: bucketMonthly('needs'),
+      debtPayments: debtM,
+      monthlySavingsCapacity: Math.max(0, savingsM + Math.max(0, leftover)),
+      budgetItems: state.items,
+      budgetIncome: state.income,
+      budgetMode: state.mode
     });
   }
 
-  function setBar(id, actualShare, bench) {
-    const el = $(id);
-    // scale so the benchmark mark sits at its labeled percent; cap bar at 100% width
-    const width = Math.min(100, actualShare * 100);
-    el.style.width = width + '%';
-    el.className = 'bar-fill' + (actualShare > bench + 0.001 ? ' hot' : '');
-  }
-
-  function setFlag(id, actualShare, bench, label, essential) {
-    const el = $(id);
-    if (actualShare > bench + 0.001) {
-      const over = (actualShare - bench) * 100;
-      el.className = 'flag hot';
-      el.textContent = label + ' is about ' + over.toFixed(0) + ' points over the ' + pct(bench) + ' benchmark.';
-    } else {
-      el.className = 'flag ok';
-      el.textContent = essential ? label + ' is within the ' + pct(bench) + ' benchmark.' : label + ' meets the ' + pct(bench) + ' target.';
-    }
-  }
-
-  // Prefill from a prior calculator in this session
+  // --- Restore a budget from earlier this session ---
   function offerPrefill() {
     const d = hmLoad();
-    if (d && (d.housing != null || d.essentialExpenses != null || d.takeHomeIncome != null)) {
-      // Only offer if this page hasn't been the one that saved (i.e. values differ from defaults is hard to know; always offer if data exists)
+    if (d && Array.isArray(d.budgetItems) && d.budgetItems.length) {
       $('prefill').classList.add('show');
       $('prefillApply').addEventListener('click', () => {
-        if (d.takeHomeIncome != null) $('income').value = d.takeHomeIncome;
-        if (d.housing != null) $('housing').value = d.housing;
-        if (d.transportation != null) $('transportation').value = d.transportation;
-        if (d.food != null) $('food').value = d.food;
-        if (d.savings != null) $('savings').value = d.savings;
-        if (d.debtPayments != null) $('debt').value = d.debtPayments;
-        if (d.discretionary != null) $('discretionary').value = d.discretionary;
+        state.items = d.budgetItems.map(x => Object.assign({}, x));
+        if (typeof d.budgetIncome === 'number') { state.income = d.budgetIncome; $('income').value = state.income; }
         $('prefill').classList.remove('show');
-        calc();
+        setMode(state.mode);
       });
       $('prefillDismiss').addEventListener('click', () => $('prefill').classList.remove('show'));
     }
   }
 
-  inputs.forEach(id => $(id).addEventListener('input', calc));
+  // --- Init ---
+  const startMode = new URLSearchParams(location.search).get('mode');
+  if (startMode === 'build' || startMode === 'check') state.mode = startMode;
+
+  $('income').value = state.income;
+  $('income').addEventListener('input', e => { state.income = Math.max(0, parseFloat(e.target.value) || 0); recompute(); });
+
+  document.querySelectorAll('#modeToggle button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+  const num = e => Math.max(0, parseFloat(e.target.value) || 0);
+  $('checkNeeds').addEventListener('input', e => { setCheckBucket('needs', num(e)); recompute(); });
+  $('checkWants').addEventListener('input', e => { setCheckBucket('wants', num(e)); recompute(); });
+  $('checkSavings').addEventListener('input', e => { setCheckBucket('savings', num(e)); recompute(); });
+  $('checkIrregular').addEventListener('input', e => { setIrregular(num(e)); recompute(); });
+
   offerPrefill();
-  calc();
+  setMode(state.mode);
 </script>
 
 </body>
